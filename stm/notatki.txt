@@ -1,0 +1,2 @@
+timer 6- regulator 200Hz
+timer 7- sterowanie silnikami 10kHz
