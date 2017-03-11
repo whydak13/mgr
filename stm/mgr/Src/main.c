@@ -35,6 +35,8 @@
 
 /* USER CODE BEGIN Includes */
 #include <limits.h>
+#include "LIB_Config.h"
+#include "my_interupts.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -47,33 +49,7 @@ TIM_HandleTypeDef htim7;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-//Rejestry
-#define LSM303_ACC_ADDRESS (0x19 << 1) // adres akcelerometru: 0011001x
-#define LSM303_ACC_CTRL_REG1_A 0x20 // rejestr ustawien 1
-#define LSM303_ACC_Z_H_A 0x2D // wyzszy bajt danych osi Z
-#define LSM303_ACC_X_L_A 0x28 // mlodszy bajt danych osi X
 
-// mlodszy bajt danych osi X z najstarszym bitem ustawionym na 1 w celu
-// wymuszenia autoinkrementacji adresow rejestru w urzadzeniu docelowym
-// (zeby moc odczytac wiecej danych na raz)
-#define LSM303_ACC_X_L_A_MULTI_READ (LSM303_ACC_X_L_A | 0x80)
-
-#define LSM303_ACC_XYZ_ENABLE 0x07 // 0000 0111
-
-// Maski bitowe
-// CTRL_REG1_A = [ODR3][ODR2][ODR1][ODR0][LPEN][ZEN][YEN][XEN]
-#define LSM303_ACC_Z_ENABLE 0x07 // 0000 0100
-#define LSM303_ACC_100HZ 0x50 //0101 0000
-#define LSM303_ACC_RESOLUTION 2.0 // Maksymalna wartosc przyspieszenia [g]
-// Zmienne
-uint8_t Data[6]; // Zmienna do bezposredniego odczytu danych z akcelerometru
-int16_t Xaxis = 0; // Zawiera przeksztalcona forme odczytanych danych z osi X
-int16_t Yaxis = 0; // Zawiera przeksztalcona forme odczytanych danych z osi Y
-int16_t Zaxis = 0; // Zawiera przeksztalcona forme odczytanych danych z osi Z
-
-float Xaxis_g = 0; // Zawiera przyspieszenie w osi X przekstalcone na jednostke fizyczna [g]
-float Yaxis_g = 0; // Zawiera przyspieszenie w osi Y przekstalcone na jednostke fizyczna [g]
-float Zaxis_g = 0; // Zawiera przyspieszenie w osi Z przekstalcone na jednostke fizyczna [g]
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -88,7 +64,7 @@ static void MX_TIM7_Init(void);
 /* Private function prototypes -----------------------------------------------*/
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
  if(htim->Instance == TIM6){ // Je¿eli przerwanie pochodzi od timera 6 200Hz
-	 my_regulator_ict();
+	 //float x =my_regulator_ict(0,&hi2c1);
 	 //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
  }
  if(htim->Instance == TIM7){ // Je¿eli przerwanie pochodzi od timera 7 10 kHz
@@ -139,19 +115,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  // Pobranie 6 bajtow danych zawierajacych przyspieszenia w 3 osiach
-	   HAL_I2C_Mem_Read(&hi2c1, LSM303_ACC_ADDRESS, LSM303_ACC_X_L_A_MULTI_READ, 1, Data, 6, 100);
-
-	   // Konwersja odebranych bajtow danych na typ int16_t
-	   Xaxis = ((Data[1] << 8) | Data[0]);
-	   Yaxis = ((Data[3] << 8) | Data[2]);
-	   Zaxis = ((Data[5] << 8) | Data[4]);
-
-	   // obliczenie przyspieszen w kazdej z osi w jednostce SI [g]
-	   Xaxis_g = ((float) Xaxis * LSM303_ACC_RESOLUTION) / (float) INT16_MAX;
-	   Yaxis_g = ((float) Yaxis * LSM303_ACC_RESOLUTION) / (float) INT16_MAX;
-	   Zaxis_g = ((float) Zaxis * LSM303_ACC_RESOLUTION) / (float) INT16_MAX;
+	  float x =my_regulator_ict(0,&hi2c1);
 	 my_main_loop();
+	 //float x =my_regulator_ict(0,&hi2c1);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

@@ -4,19 +4,34 @@
  *  Created on: 8 mar 2017
  *      Author: Micha³
  */
+#include "my_interupts.h"
+// Zmienne
+uint8_t Data[6]; // Zmienna do bezposredniego odczytu danych z akcelerometru
+int16_t Xaxis = 0; // Zawiera przeksztalcona forme odczytanych danych z osi X
+int16_t Yaxis = 0; // Zawiera przeksztalcona forme odczytanych danych z osi Y
+int16_t Zaxis = 0; // Zawiera przeksztalcona forme odczytanych danych z osi Z
 
-#include "stm32f3xx_hal.h"
-#define MAX_SPEED 10000; // Max speed of motor in pulses per second
-#define STEP_ANGLE 1.8; // Motor step angle in degrees
-#define N 1000;
-#define STEP_DIVIDER 8; // full step mode=1, half stepping =2 ect
-#define MOTOR_DRIVER_FREQ 10000;
+float Xaxis_g = 0; // Zawiera przyspieszenie w osi X przekstalcone na jednostke fizyczna [g]
+float Yaxis_g = 0; // Zawiera przyspieszenie w osi Y przekstalcone na jednostke fizyczna [g]
+float Zaxis_g = 0; // Zawiera przyspieszenie w osi Z przekstalcone na jednostke fizyczna [g]
 
-float  my_regulator_ict(float acceleration)
+float  my_regulator_ict(float acceleration,I2C_HandleTypeDef *hi2c1)
 {
 
+	  // Pobranie 6 bajtow danych zawierajacych przyspieszenia w 3 osiach
+	   HAL_I2C_Mem_Read(hi2c1, LSM303_ACC_ADDRESS, LSM303_ACC_X_L_A_MULTI_READ, 1, Data, 6, 100);
 
+	   // Konwersja odebranych bajtow danych na typ int16_t
+	   Xaxis = ((Data[1] << 8) | Data[0]);
+	   Yaxis = ((Data[3] << 8) | Data[2]);
+	   Zaxis = ((Data[5] << 8) | Data[4]);
+
+	   // obliczenie przyspieszen w kazdej z osi w jednostce SI [g]
+	   Xaxis_g = ((float) Xaxis * LSM303_ACC_RESOLUTION) / (float) INT16_MAX;
+	   Yaxis_g = ((float) Yaxis * LSM303_ACC_RESOLUTION) / (float) INT16_MAX;
+	   Zaxis_g = ((float) Zaxis * LSM303_ACC_RESOLUTION) / (float) INT16_MAX;
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
+	HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_11);//led
 	return 0;
 
 }
