@@ -37,6 +37,7 @@
 #include <limits.h>
 #include "LIB_Config.h"
 #include "my_interupts.h"
+#include "tm_stm32f4_l3gd20.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -104,6 +105,16 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim6);
   HAL_TIM_Base_Start_IT(&htim7);
   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, GPIO_PIN_SET);
+
+  /* L3GD20 Struct */
+      TM_L3GD20_t L3GD20_Data;
+      /* Init L3GD20 sensor */
+          if (TM_L3GD20_Init(TM_L3GD20_Scale_2000) != TM_L3GD20_Result_Ok) {
+              /* Sensor error */
+              return 666;
+
+          }
+
   //Akcelerometr
   // wypelnieine zmiennej konfiguracyjnej odpowiednimi opcjami
    uint8_t Settings = LSM303_ACC_XYZ_ENABLE | LSM303_ACC_100HZ;
@@ -117,6 +128,8 @@ int main(void)
   {
 	  float x =my_regulator_ict(0,&hi2c1);
 	 my_main_loop();
+	 int who_am_i=TM_L3GD20_INT_ReadSPI(L3GD20_REG_WHO_AM_I) ;
+	 //TM_L3GD20_Read(&L3GD20_Data);
 	 //float x =my_regulator_ict(0,&hi2c1);
   /* USER CODE END WHILE */
 
@@ -192,12 +205,12 @@ void MX_SPI1_Init(void)
 
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
-  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.Direction = SPI_DIRECTION_1LINE;
   hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
   hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLED;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLED;

@@ -15,11 +15,11 @@ float Xaxis_g = 0; // Zawiera przyspieszenie w osi X przekstalcone na jednostke 
 float Yaxis_g = 0; // Zawiera przyspieszenie w osi Y przekstalcone na jednostke fizyczna [g]
 float Zaxis_g = 0; // Zawiera przyspieszenie w osi Z przekstalcone na jednostke fizyczna [g]
 
-float  my_regulator_ict(float acceleration,I2C_HandleTypeDef *hi2c1)
+float  my_regulator_ict(float acceleration)
 {
 
-	  // Pobranie 6 bajtow danych zawierajacych przyspieszenia w 3 osiach
-	   HAL_I2C_Mem_Read(hi2c1, LSM303_ACC_ADDRESS, LSM303_ACC_X_L_A_MULTI_READ, 1, Data, 6, 100);
+	  // Pobranie 6 bajt7ow danych zawierajacych przyspieszenia w 3 osiach
+	   HAL_I2C_Mem_Read(&hi2c1, LSM303_ACC_ADDRESS, LSM303_ACC_X_L_A_MULTI_READ, 1, Data, 6, 100);
 
 	   // Konwersja odebranych bajtow danych na typ int16_t
 	   Xaxis = ((Data[1] << 8) | Data[0]);

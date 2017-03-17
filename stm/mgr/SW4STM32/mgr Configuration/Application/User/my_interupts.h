@@ -12,6 +12,7 @@
 #include <limits.h>
 
 ////////////////////////////AKCELEROMETR
+extern I2C_HandleTypeDef hi2c1;
 #define LSM303_ACC_ADDRESS (0x19 << 1) // adres akcelerometru: 0011001x
 #define LSM303_ACC_CTRL_REG1_A 0x20 // rejestr ustawien 1
 #define LSM303_ACC_Z_H_A 0x2D // wyzszy bajt danych osi Z
