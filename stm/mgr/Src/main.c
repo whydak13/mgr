@@ -106,21 +106,41 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim7);
   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, GPIO_PIN_SET);
 
+
+
+
+
+
   /* L3GD20 Struct */
       TM_L3GD20_t L3GD20_Data;
-      /* Init L3GD20 sensor */
-          if (TM_L3GD20_Init(TM_L3GD20_Scale_2000) != TM_L3GD20_Result_Ok) {
-              /* Sensor error */
-              return 666;
 
-          }
+      uint16_t ReadData;
+      uint16_t WriteData;
+      /* Init L3GD20 sensor */
+      //    if (TM_L3GD20_Init(TM_L3GD20_Scale_2000) != TM_L3GD20_Result_Ok) {
+              /* Sensor error */
+       //       return 666;
+
+      //    }
 
   //Akcelerometr
   // wypelnieine zmiennej konfiguracyjnej odpowiednimi opcjami
    uint8_t Settings = LSM303_ACC_XYZ_ENABLE | LSM303_ACC_100HZ;
    // Wpisanie konfiguracji do rejestru akcelerometru
-   HAL_I2C_Mem_Write(&hi2c1, LSM303_ACC_ADDRESS, LSM303_ACC_CTRL_REG1_A, 1, &Settings, 1, 100);
-  /* USER CODE END 2 */
+    HAL_I2C_Mem_Write(&hi2c1, LSM303_ACC_ADDRESS, LSM303_ACC_CTRL_REG1_A, 1, &Settings, 1, 100);
+
+    //SPI
+    L3GD20_CS_LOW;
+    WriteData = 0x8f00;
+    HAL_SPI_TransmitReceive(&hspi1, &WriteData, &ReadData, 1, HAL_MAX_DELAY);
+    if (ReadData == 0xffd4) {
+            HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, GPIO_PIN_SET);
+    }
+    L3GD20_CS_HIGH;
+
+
+
+    /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -128,8 +148,8 @@ int main(void)
   {
 	  float x =my_regulator_ict(0,&hi2c1);
 	 my_main_loop();
-	 int who_am_i=TM_L3GD20_INT_ReadSPI(L3GD20_REG_WHO_AM_I) ;
-	 //TM_L3GD20_Read(&L3GD20_Data);
+	 //int who_am_i=TM_L3GD20_INT_ReadSPI(L3GD20_REG_WHO_AM_I) ;
+	 TM_L3GD20_Read(&L3GD20_Data);
 	 //float x =my_regulator_ict(0,&hi2c1);
   /* USER CODE END WHILE */
 
@@ -205,12 +225,12 @@ void MX_SPI1_Init(void)
 
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
-  hspi1.Init.Direction = SPI_DIRECTION_1LINE;
-  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_16BIT;
   hspi1.Init.CLKPolarity = SPI_POLARITY_HIGH;
   hspi1.Init.CLKPhase = SPI_PHASE_2EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLED;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLED;
