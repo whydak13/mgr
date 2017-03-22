@@ -111,7 +111,6 @@ uint8_t TM_L3GD20_INT_ReadSPI(uint8_t address) {
     uint16_t WriteData;
 
     L3GD20_CS_LOW;
-    //WriteData = 0x8f00;
     WriteData =((uint16_t)address)<<8;
     WriteData =WriteData | 0x8000;
     HAL_SPI_TransmitReceive(&hspi1, &WriteData, &ReadData, 1, HAL_MAX_DELAY);
@@ -134,15 +133,6 @@ void TM_L3GD20_INT_WriteSPI(uint8_t address, uint8_t data) {
 	WriteData =WriteData | data;
 	HAL_SPI_Transmit(&hspi1, &WriteData, 1, HAL_MAX_DELAY);
 
-	/*HAL_SPI_Transmit(&hspi1, &address, 1, HAL_MAX_DELAY);
-	L3GD20_CS_HIGH;
-	L3GD20_CS_LOW;
-	HAL_SPI_Transmit(&hspi1, &data, 1, HAL_MAX_DELAY);*/
-	/* Send address with write command */
-	//TM_SPI_Send(L3GD20_SPI, address);
-	/* Write data */
-	//TM_SPI_Send(L3GD20_SPI, data);
-	/* CS high */
 	L3GD20_CS_HIGH;
 }
 
