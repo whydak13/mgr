@@ -76,7 +76,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-
+/* L3GD20 Struct */
+    TM_L3GD20_t L3GD20_Data;
 /* USER CODE END 0 */
 
 int main(void)
@@ -111,17 +112,17 @@ int main(void)
 
 
 
-  /* L3GD20 Struct */
-      TM_L3GD20_t L3GD20_Data;
 
-      uint16_t ReadData;
-      uint16_t WriteData;
+
+      int16_t GyroZData;
+      int16_t WriteData;
+      TM_L3GD20_Init(TM_L3GD20_Scale_2000);
       /* Init L3GD20 sensor */
       //    if (TM_L3GD20_Init(TM_L3GD20_Scale_2000) != TM_L3GD20_Result_Ok) {
-              /* Sensor error */
-       //       return 666;
+      //        /* Sensor error */
+     //         return 666;
 
-      //    }
+     //    }
 
   //Akcelerometr
   // wypelnieine zmiennej konfiguracyjnej odpowiednimi opcjami
@@ -130,15 +131,19 @@ int main(void)
     HAL_I2C_Mem_Write(&hi2c1, LSM303_ACC_ADDRESS, LSM303_ACC_CTRL_REG1_A, 1, &Settings, 1, 100);
 
     //SPI
+    /*
     L3GD20_CS_LOW;
     WriteData = 0x8f00;
     HAL_SPI_TransmitReceive(&hspi1, &WriteData, &ReadData, 1, HAL_MAX_DELAY);
+
     if (ReadData == 0xffd4) {
             HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, GPIO_PIN_SET);
     }
     L3GD20_CS_HIGH;
 
 
+*/
+   // TM_L3GD20_INT_ReadSPI(L3GD20_REG_WHO_AM_I);
 
     /* USER CODE END 2 */
 
@@ -149,7 +154,9 @@ int main(void)
 	  float x =my_regulator_ict(0,&hi2c1);
 	 my_main_loop();
 	 //int who_am_i=TM_L3GD20_INT_ReadSPI(L3GD20_REG_WHO_AM_I) ;
-	 TM_L3GD20_Read(&L3GD20_Data);
+	 //TM_L3GD20_INT_ReadSPI(L3GD20_REG_WHO_AM_I);
+	TM_L3GD20_Read(&L3GD20_Data);
+	 GyroZData=L3GD20_Data.Z;
 	 //float x =my_regulator_ict(0,&hi2c1);
   /* USER CODE END WHILE */
 

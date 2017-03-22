@@ -107,24 +107,18 @@ TM_L3GD20_Result_t TM_L3GD20_Read(TM_L3GD20_t* L3DG20_Data) {
 
 uint8_t TM_L3GD20_INT_ReadSPI(uint8_t address) {
 	uint8_t data=0;
-	/* CS low */
-	L3GD20_CS_LOW;
-	uint8_t RxData[2];
-	RxData[0]=address;
-	RxData[1]=data;
-		HAL_SPI_Transmit(&hspi1, RxData, 2, HAL_MAX_DELAY);
-	/* Send address with read command */
-	//HAL_SPI_Transmit(&hspi1, &address, 1, HAL_MAX_DELAY);
-	//TM_SPI_Send(L3GD20_SPI, address | 0x80);
-	/* Read data */
-	//L3GD20_CS_HIGH;
-	//L3GD20_CS_LOW;
-	//data = TM_SPI_Send(L3GD20_SPI, 0xFF);
-	//HAL_SPI_Transmit(&hspi1, &data, 1, HAL_MAX_DELAY);
-	/* CS high */
-	L3GD20_CS_HIGH;
-	/* Return data */
-	data=RxData[1];
+    uint16_t ReadData;
+    uint16_t WriteData;
+
+    L3GD20_CS_LOW;
+    //WriteData = 0x8f00;
+    WriteData =((uint16_t)address)<<8;
+    WriteData =WriteData | 0x8000;
+    HAL_SPI_TransmitReceive(&hspi1, &WriteData, &ReadData, 1, HAL_MAX_DELAY);
+
+    //(ReadData == 0xffd4)
+    data	=(uint8_t)ReadData;
+    L3GD20_CS_HIGH;
 	return data;
 }
 
@@ -132,9 +126,14 @@ void TM_L3GD20_INT_WriteSPI(uint8_t address, uint8_t data) {
 	/* CS low */
 	L3GD20_CS_LOW;
 	uint8_t TxData[2];
-	TxData[0]=address;
+    uint16_t WriteData;
+
+    TxData[0]=address;
 	TxData[1]=data;
-	HAL_SPI_Transmit(&hspi1, TxData, 2, HAL_MAX_DELAY);
+	WriteData =((uint16_t)address)<<8;
+	WriteData =WriteData | data;
+	HAL_SPI_Transmit(&hspi1, &WriteData, 1, HAL_MAX_DELAY);
+
 	/*HAL_SPI_Transmit(&hspi1, &address, 1, HAL_MAX_DELAY);
 	L3GD20_CS_HIGH;
 	L3GD20_CS_LOW;
