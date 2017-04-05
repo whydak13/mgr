@@ -48,9 +48,13 @@ SPI_HandleTypeDef hspi1;
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
 
+
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+uint32_t steppers_cnt=0;
+uint32_t time_to_next_step=0;
+int8_t stepper_direction=1;
+float acceleration=0.1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -65,12 +69,17 @@ static void MX_TIM7_Init(void);
 /* Private function prototypes -----------------------------------------------*/
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
  if(htim->Instance == TIM6){ // Je¿eli przerwanie pochodzi od timera 6 200Hz
-	 //float x =my_regulator_ict(0,&hi2c1);
+	 acceleration =my_regulator_ict(0,&hi2c1);
 	 //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
  }
  if(htim->Instance == TIM7){ // Je¿eli przerwanie pochodzi od timera 7 10 kHz
-	 my_motor_driver_ict();
-	 //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
+	 steppers_cnt++;
+	 if(steppers_cnt>time_to_next_step)
+	 {
+		 make_step(stepper_direction);
+		 time_to_next_step=calculate_next_step(acceleration);
+		 steppers_cnt=0;
+	 }
  }
 }
 /* USER CODE END PFP */
