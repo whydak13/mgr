@@ -34,8 +34,10 @@
 #include "stm32f3xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+#include <math.h>
 #include <limits.h>
 #include "LIB_Config.h"
+#include "G:\Studia\Mgr\mgr\stm\mgr\SW4STM32\mgr Configuration\Application\User\steppers.h"
 #include "my_interupts.h"
 #include "tm_stm32f4_l3gd20.h"
 /* USER CODE END Includes */
@@ -69,7 +71,7 @@ static void MX_TIM7_Init(void);
 /* Private function prototypes -----------------------------------------------*/
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
  if(htim->Instance == TIM6){ // Je¿eli przerwanie pochodzi od timera 6 200Hz
-	 acceleration =my_regulator_ict(0,&hi2c1);
+	 my_regulator_ict(acceleration);//,&hi2c1);
 	 //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
  }
  if(htim->Instance == TIM7){ // Je¿eli przerwanie pochodzi od timera 7 10 kHz
@@ -77,7 +79,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	 if(steppers_cnt>time_to_next_step)
 	 {
 		 make_step(stepper_direction);
-		 time_to_next_step=calculate_next_step(acceleration);
+		 time_to_next_step=calculate_next_step(acceleration,stepper_direction);
 		 steppers_cnt=0;
 	 }
  }

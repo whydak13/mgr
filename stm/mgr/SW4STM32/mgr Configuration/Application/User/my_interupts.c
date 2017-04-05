@@ -15,7 +15,7 @@ float Xaxis_g = 0; // Zawiera przyspieszenie w osi X przekstalcone na jednostke 
 float Yaxis_g = 0; // Zawiera przyspieszenie w osi Y przekstalcone na jednostke fizyczna [g]
 float Zaxis_g = 0; // Zawiera przyspieszenie w osi Z przekstalcone na jednostke fizyczna [g]
 
-float  my_regulator_ict(float acceleration)
+void  my_regulator_ict(float *acceleration)
 {
 
 	  // Pobranie 6 bajt7ow danych zawierajacych przyspieszenia w 3 osiach
@@ -32,7 +32,7 @@ float  my_regulator_ict(float acceleration)
 	   Zaxis_g = ((float) Zaxis * LSM303_ACC_RESOLUTION) / (float) INT16_MAX;
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
 	HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_11);//led
-	return 0;
+	*acceleration= 0;
 
 }
 

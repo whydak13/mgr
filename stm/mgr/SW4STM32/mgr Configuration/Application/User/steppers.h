@@ -4,11 +4,17 @@
  *  Created on: 29 mar 2017
  *      Author: Micha³
  */
+#define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+
 
 #ifndef APPLICATION_USER_STEPPERS_H_
 #define APPLICATION_USER_STEPPERS_H_
 
 #include "stm32f3xx_hal.h"
+#include <limits.h>
 
 #define MCU_FREQ 72000000
 #define MAX_MOTOR_SPEED 10000
@@ -35,7 +41,7 @@
 #define MOTOR_B_STEP_PIN_PORT GPIOE
 #define MOTOR_B_STEP_PIN_PIN  GPIO_PIN_3
 
-int32_t calculate_next_step(float acceleration);
+uint32_t calculate_next_step(float , int8_t );
 void steppers_init(int step_divider);
 void make_step(int8_t direction);
 void delay_200ns();
