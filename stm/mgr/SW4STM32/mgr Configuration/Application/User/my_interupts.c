@@ -32,7 +32,7 @@ void  my_regulator_ict(float *acceleration)
 	   Zaxis_g = ((float) Zaxis * LSM303_ACC_RESOLUTION) / (float) INT16_MAX;
 	HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
 	HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_11);//led
-	*acceleration= 0;
+	//*acceleration= 0;
 
 }
 

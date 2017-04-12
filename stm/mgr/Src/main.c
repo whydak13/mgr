@@ -50,13 +50,12 @@ SPI_HandleTypeDef hspi1;
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
 
-
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 uint32_t steppers_cnt=0;
-uint32_t time_to_next_step=0;
+int32_t time_to_next_step=2;
 int8_t stepper_direction=1;
-float acceleration=0.1;
+float acceleration=0.2;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,9 +68,14 @@ static void MX_TIM7_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+ acceleration=-acceleration;
+}
+
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
  if(htim->Instance == TIM6){ // Je¿eli przerwanie pochodzi od timera 6 200Hz
-	 my_regulator_ict(acceleration);//,&hi2c1);
+	 //my_regulator_ict(acceleration);//,&hi2c1);
 	 //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
  }
  if(htim->Instance == TIM7){ // Je¿eli przerwanie pochodzi od timera 7 10 kHz
@@ -129,15 +133,21 @@ int main(void)
 
 
 
-    /* USER CODE END 2 */
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  float x =my_regulator_ict(0,&hi2c1);
+	 // float x =my_regulator_ict(0,&hi2c1);
 	 my_main_loop();
-
+	 /* steppers_cnt++;
+	  	 if(steppers_cnt>time_to_next_step)
+	  	 {
+	  		 make_step(stepper_direction);
+	  		 time_to_next_step=calculate_next_step(acceleration,stepper_direction);
+	  		 steppers_cnt=0;
+	  	 }*/
 	TM_L3GD20_Read(&L3GD20_Data);
 
 	 //float x =my_regulator_ict(0,&hi2c1);
@@ -288,10 +298,8 @@ void MX_GPIO_Init(void)
   __GPIOA_CLK_ENABLE();
   __GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pins : DRDY_Pin MEMS_INT3_Pin MEMS_INT4_Pin MEMS_INT1_Pin 
-                           MEMS_INT2_Pin */
-  GPIO_InitStruct.Pin = DRDY_Pin|MEMS_INT3_Pin|MEMS_INT4_Pin|MEMS_INT1_Pin 
-                          |MEMS_INT2_Pin;
+  /*Configure GPIO pins : DRDY_Pin MEMS_INT3_Pin MEMS_INT4_Pin MEMS_INT2_Pin */
+  GPIO_InitStruct.Pin = DRDY_Pin|MEMS_INT3_Pin|MEMS_INT4_Pin|MEMS_INT2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
@@ -307,11 +315,11 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  /*Configure GPIO pin : PA0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PC6 PC7 */
   GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
@@ -327,6 +335,10 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF14_USB;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
 }
 
