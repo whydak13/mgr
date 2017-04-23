@@ -1,6 +1,6 @@
 # include "steppers.h"
 
-int32_t calculate_next_step(float acceleration,int8_t stepper_direction)
+int32_t calculate_next_step(float* acceleration,int8_t* stepper_direction, float *return_n)
 {
 	static float c=0;
 	static float c_prev=0;
@@ -11,35 +11,68 @@ int32_t calculate_next_step(float acceleration,int8_t stepper_direction)
 
 	if (c==0) // Init
 	{
-		c=(float)STEPPER_DRIVER_FREQUENCY*sqrtf((2*MOTOR_STEP_ANGLE)/fabs(acceleration));
+		c=(float)STEPPER_DRIVER_FREQUENCY*sqrtf((2*MOTOR_STEP_ANGLE)/fabs(*acceleration));
 		//c=(float)STEPPER_DRIVER_FREQUENCY/(acceleration);            //         *((2*MOTOR_STEP_ANGLE)/(acceleration));
 		//c=STEPPER_DRIVER_FREQUENCY*powf((2*MOTOR_STEP_ANGLE)/(acceleration),0.5);
 		c_prev=c;
-		accleration_prev=acceleration;
+		accleration_prev=(*acceleration);
 		n++;
+		(*return_n)=n;
 		return (int32_t)c;
 	}
-	if (acceleration!=accleration_prev)
+	if ((*acceleration)!=accleration_prev)
     {
-        n=(n_prev*accleration_prev)/acceleration;
+        n=(n_prev*accleration_prev)/(*acceleration);
     }
     else
         n++;
     c=(int32_t)(c_prev - (2*c_prev)/(4*n+1));
     //limit_motor_speed(&c, &stepper_direction, &acceleration);
-    if(c<=6)
+    if(fabs(n)>200)
     {
-    	c=(int32_t)6;
-    }
-    if(c>=6666)
+    	//c=(int32_t)100;
+    	n--;
+    	n_prev=n--;
+    } else
+        n_prev=n;
+    if(fabs(n)<=0)
     {
-    	c=(int32_t)6666;
 
-    }
+    	if ((*acceleration)<0)
+    	{
+			*stepper_direction=-(*stepper_direction);
+			*acceleration=-(*acceleration);
+			c=0;
+			n=1;
+		   n_prev=1;
+    	}
+
+    }/*
+    if(c<=100)
+        {
+        	c=(int32_t)100;
+        	n--;
+        	n_prev=n+1;
+        } else
+            n_prev=n;
+        if(c>=2000)
+        {
+        	c=(int32_t)2000;
+        	if ((*acceleration)<0)
+        	{
+    			*stepper_direction=-(*stepper_direction);
+    			*acceleration=-(*acceleration);
+    			c=0;
+    			n=1;
+    		   n_prev=1;
+        	}
+
+        }*/
 
     c_prev=c;
-    n_prev=n;
-    accleration_prev=acceleration;
+
+    accleration_prev=(*acceleration);
+    (*return_n)=n;
     return (int32_t)c;
 
 }

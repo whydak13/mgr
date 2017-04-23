@@ -34,6 +34,8 @@
 #include "stm32f3xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+float global_n;
+float *pointer_to_n;
 #include <math.h>
 #include <limits.h>
 #include "LIB_Config.h"
@@ -55,7 +57,8 @@ TIM_HandleTypeDef htim7;
 uint32_t steppers_cnt=0;
 int32_t time_to_next_step=2;
 int8_t stepper_direction=1;
-float acceleration=0.2;
+float acceleration=2;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -83,8 +86,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	 if(steppers_cnt>time_to_next_step)
 	 {
 		 make_step(stepper_direction);
-		 time_to_next_step=calculate_next_step(acceleration,stepper_direction);
+		 time_to_next_step=calculate_next_step(&acceleration,&stepper_direction,&global_n);
 		 steppers_cnt=0;
+
 	 }
  }
 }
@@ -327,6 +331,13 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA8 PA9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : DM_Pin DP_Pin */
   GPIO_InitStruct.Pin = DM_Pin|DP_Pin;
