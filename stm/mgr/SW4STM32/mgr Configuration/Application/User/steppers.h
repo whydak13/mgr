@@ -42,7 +42,7 @@
 #define MOTOR_B_STEP_PIN_PORT GPIOE
 #define MOTOR_B_STEP_PIN_PIN  GPIO_PIN_3
 
-int32_t calculate_next_step(float *, int8_t* ,float *);
+uint32_t calculate_next_step(float *, int8_t* ,float *);
 void steppers_init(int step_divider);
 void make_step(int8_t direction);
 void delay_200ns();

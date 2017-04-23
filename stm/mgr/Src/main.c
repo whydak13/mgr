@@ -55,9 +55,9 @@ TIM_HandleTypeDef htim7;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 uint32_t steppers_cnt=0;
-int32_t time_to_next_step=2;
+uint32_t time_to_next_step=2;
 int8_t stepper_direction=1;
-float acceleration=2;
+float acceleration=5;
 
 /* USER CODE END PV */
 
@@ -81,7 +81,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	 //my_regulator_ict(acceleration);//,&hi2c1);
 	 //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
  }
- if(htim->Instance == TIM7){ // Je¿eli przerwanie pochodzi od timera 7 10 kHz
+ if(htim->Instance == TIM7){ // Je¿eli przerwanie pochodzi od timera 7 100 kHz
 	 steppers_cnt++;
 	 if(steppers_cnt>time_to_next_step)
 	 {
@@ -272,7 +272,7 @@ void MX_TIM7_Init(void)
   htim7.Instance = TIM7;
   htim7.Init.Prescaler = 71;
   htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim7.Init.Period = 99;
+  htim7.Init.Period = 9;
   HAL_TIM_Base_Init(&htim7);
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
