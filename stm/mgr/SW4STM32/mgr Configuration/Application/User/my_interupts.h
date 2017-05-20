@@ -39,7 +39,12 @@ extern I2C_HandleTypeDef hi2c1;
 #define LSM303_ACC_XYZ_ENABLE 0x07 // 0000 0111
 ////////////////////////////AKCELEROMETR KONIEC
 
+typedef struct {
+	float X; /*!< X axis rotation */
+	float Y; /*!< Y axis rotation */
+	float Z; /*!< Z axis rotation */
+} Acceleration_G_data;
 
-
+void  getAcceleration(Acceleration_G_data *);
 
 #endif /* APPLICATION_USER_MY_INTERUPTS_H_ */

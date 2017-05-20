@@ -33,15 +33,15 @@ TM_L3GD20_Result_t TM_L3GD20_Init(TM_L3GD20_Scale_t scale) {
 		L3GD20_CS_HIGH;
 
 	/* Check if sensor is L3GD20 */
-	//if (TM_L3GD20_INT_ReadSPI(L3GD20_REG_WHO_AM_I) != L3GD20_WHO_AM_I) {
+	if (TM_L3GD20_INT_ReadSPI(L3GD20_REG_WHO_AM_I) != L3GD20_WHO_AM_I) {
 		/* Sensor connected is not L3GD20 */
-	//	return TM_L3GD20_Result_Error;
-	//}
+		return TM_L3GD20_Result_Error;
+	}
 
 
 	/* Enable L3GD20 Power bit */
-	TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG1, 0xFF);
-
+	//TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG1, 0xFF);
+	TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG1, 0x4F);
 	/* Set L3GD20 scale */
 	if (scale == TM_L3GD20_Scale_250) {
 		TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG4, 0x00);
@@ -55,10 +55,11 @@ TM_L3GD20_Result_t TM_L3GD20_Init(TM_L3GD20_Scale_t scale) {
 	TM_L3GD20_INT_Scale = scale;
 
 	/* Set high-pass filter settings */
-	TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG2, 0x00);
-
+	//TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG2, 0x00);
+	TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG2, 0x09);
 	/* Enable high-pass filter */
-	TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG5, 0x10);
+	//TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG5, 0x10);
+	TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG5, 0x00);
 	
 	/* Everything OK */
 	return TM_L3GD20_Result_Ok;
@@ -90,13 +91,13 @@ TM_L3GD20_Result_t TM_L3GD20_Read(TM_L3GD20_t* L3DG20_Data) {
 		/* Sensitivity at 2000 range = 70 mdps/digit */
 		s = L3GD20_SENSITIVITY_2000 * 0.001;
 	}
-	
-	temp = (float)L3DG20_Data->X * s;
-	L3DG20_Data->X = (int16_t) temp;
-	temp = (float)L3DG20_Data->Y * s;
-	L3DG20_Data->Y = (int16_t) temp;
-	temp = (float)L3DG20_Data->Z * s;
-	L3DG20_Data->Z = (int16_t) temp;
+
+	//temp = (float)L3DG20_Data->X * s;
+	//L3DG20_Data->X = (int16_t) temp;
+	//temp = (float)L3DG20_Data->Y * s;
+	//L3DG20_Data->Y = (int16_t) temp;
+	//temp = (float)L3DG20_Data->Z * s;
+	//L3DG20_Data->Z = (int16_t) temp;
 	
 	/* Return OK */
 	return TM_L3GD20_Result_Ok;

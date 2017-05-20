@@ -58,7 +58,13 @@ uint32_t steppers_cnt=0;
 uint32_t time_to_next_step=2;
 int8_t stepper_direction=1;
 float acceleration=5;
+TM_L3GD20_t L3GD20_Data;
+Acceleration_G_data LSM303_Data;
 
+float gyro_X_angle =0;
+float gyro_Y_angle =0;
+float gyro_Z_angle =0;
+float accel_angle;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -78,8 +84,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
  if(htim->Instance == TIM6){ // Je¿eli przerwanie pochodzi od timera 6 200Hz
+	 float const dt=0.005;
 	 //my_regulator_ict(acceleration);//,&hi2c1);
 	 //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
+	  // Pobranie 6 bajt7ow danych zawierajacych przyspieszenia w 3 osiach
+	  	TM_L3GD20_Read(&L3GD20_Data);
+	 	getAcceleration(&LSM303_Data);
+
+		gyro_X_angle-=((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt;
+		accel_angle=atan2(LSM303_Data.X,LSM303_Data.Z)*57.2957795;
  }
  if(htim->Instance == TIM7){ // Je¿eli przerwanie pochodzi od timera 7 100 kHz
 	 steppers_cnt++;
@@ -96,7 +109,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 /* USER CODE BEGIN 0 */
 /* L3GD20 Struct */
-    TM_L3GD20_t L3GD20_Data;
+
 /* USER CODE END 0 */
 
 int main(void)
@@ -126,7 +139,7 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim7);
   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, GPIO_PIN_SET);
 //GYRO INIT
-  TM_L3GD20_Init(TM_L3GD20_Scale_2000);
+  TM_L3GD20_Init(TM_L3GD20_Scale_250);
 
 
   //Akcelerometr
@@ -143,8 +156,12 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_8);
+		HAL_Delay(500);
+	//	TM_L3GD20_INT_ReadSPI(L3GD20_REG_WHO_AM_I) ;
+		 //TM_L3GD20_Read(&L3GD20_Data);
 	 // float x =my_regulator_ict(0,&hi2c1);
-	 my_main_loop();
+	 //my_main_loop();
 	 /* steppers_cnt++;
 	  	 if(steppers_cnt>time_to_next_step)
 	  	 {
@@ -152,7 +169,7 @@ int main(void)
 	  		 time_to_next_step=calculate_next_step(acceleration,stepper_direction);
 	  		 steppers_cnt=0;
 	  	 }*/
-	TM_L3GD20_Read(&L3GD20_Data);
+	//TM_L3GD20_Read(&L3GD20_Data);
 
 	 //float x =my_regulator_ict(0,&hi2c1);
   /* USER CODE END WHILE */
@@ -325,15 +342,15 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PC6 PC7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+  /*Configure GPIO pins : PC6 PC7 PC8 PC9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA8 PA9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+  /*Configure GPIO pins : PA8 PA9 PA10 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_LOW;

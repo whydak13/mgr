@@ -183,6 +183,12 @@ typedef struct {
 	int16_t Z; /*!< Z axis rotation */
 } TM_L3GD20_t;
 
+typedef struct {
+	float X; /*!< X axis rotation */
+	float Y; /*!< Y axis rotation */
+	float Z; /*!< Z axis rotation */
+} Acceleration_G_data;
+
 /**
  * @brief  L3GD20 Result enumerations
  */
