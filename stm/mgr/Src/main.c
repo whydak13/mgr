@@ -36,10 +36,13 @@
 /* USER CODE BEGIN Includes */
 float global_n;
 float *pointer_to_n;
+
 #include <math.h>
 #include <limits.h>
 #include "LIB_Config.h"
 #include "G:\Studia\Mgr\mgr\stm\mgr\SW4STM32\mgr Configuration\Application\User\steppers.h"
+#include "G:\Studia\Mgr\mgr\stm\mgr\SW4STM32\mgr Configuration\Application\User\magdewick.h"
+#include "G:\Studia\Mgr\mgr\stm\mgr\SW4STM32\mgr Configuration\Application\User\MadgwickAHRS.h"
 #include "my_interupts.h"
 #include "tm_stm32f4_l3gd20.h"
 /* USER CODE END Includes */
@@ -54,17 +57,25 @@ TIM_HandleTypeDef htim7;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+
 uint32_t steppers_cnt=0;
 uint32_t time_to_next_step=2;
 int8_t stepper_direction=1;
 float acceleration=5;
 TM_L3GD20_t L3GD20_Data;
 Acceleration_G_data LSM303_Data;
+// Global system variables
+Quaternion Magdewick_res={1,0,0,0};
 
+// estimated orientation quaternion elements with initial conditions
 float gyro_X_angle =0;
 float gyro_Y_angle =0;
 float gyro_Z_angle =0;
+float gyro_X_speed =0;
+float gyro_Y_speed =0;
+float gyro_Z_speed =0;
 float accel_angle;
+float pitch=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,8 +101,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	  // Pobranie 6 bajt7ow danych zawierajacych przyspieszenia w 3 osiach
 	  	TM_L3GD20_Read(&L3GD20_Data);
 	 	getAcceleration(&LSM303_Data);
-
-		gyro_X_angle-=((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt;
+	 	gyro_X_speed =((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*0.0174532925;
+	 	gyro_Y_speed =((float)(L3GD20_Data.Y)*L3GD20_SENSITIVITY_250 * 0.001)*0.0174532925;
+	 	gyro_Z_speed =((float)(L3GD20_Data.Z)*L3GD20_SENSITIVITY_250 * 0.001)*0.0174532925;
+	 //	filterUpdate(&L3GD20_Data, &LSM303_Data, &Magdewick_res);
+	 	MadgwickAHRSupdateIMU(gyro_X_speed, gyro_Y_speed, gyro_Z_speed, LSM303_Data.X, LSM303_Data.Y, LSM303_Data.Z);
+	 	pitch =( acosf(q0 / sqrt(q0*q0 + q2*q2)) * 2.0f - 1.570796327f)*57.2957795;
+	 	gyro_X_angle-=((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt;
 		accel_angle=atan2(LSM303_Data.X,LSM303_Data.Z)*57.2957795;
  }
  if(htim->Instance == TIM7){ // Je¿eli przerwanie pochodzi od timera 7 100 kHz

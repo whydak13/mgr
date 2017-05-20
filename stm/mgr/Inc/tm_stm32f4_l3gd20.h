@@ -189,6 +189,7 @@ typedef struct {
 	float Z; /*!< Z axis rotation */
 } Acceleration_G_data;
 
+
 /**
  * @brief  L3GD20 Result enumerations
  */
