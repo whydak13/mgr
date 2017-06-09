@@ -110,7 +110,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 	 	pitch =( acosf(q0 / sqrt(q0*q0 + q2*q2)) * 2.0f - 1.570796327f)*57.2957795;
 	 	roll=atan2(+2.0 * (q0 * q1 + q2 * q3),+1.0 - 2.0 * (q1 * q1 + q2 * q2))*57.2957795;;
-	 	acceleration=-roll;
+	 	acceleration=-(roll*stepper_direction);
 
 	 	gyro_X_angle-=((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt;
 		accel_angle=atan2(LSM303_Data.X,LSM303_Data.Z)*57.2957795;
