@@ -6,10 +6,18 @@ uint32_t calculate_next_step(float* acceleration,int8_t* stepper_direction, floa
 	static float n=1;
 	static float accleration_prev=0;
 
+	if (n==-1)
+			{
+    	(*stepper_direction)=-(*stepper_direction);
+    	(*acceleration)=-(*acceleration);
+    	accleration_prev=(*acceleration);
+			}
 
 	if ((c==0)||(n==0)) // Init
 	{
 		c=(float)STEPPER_DRIVER_FREQUENCY*sqrtf((2*MOTOR_STEP_ANGLE)/fabs(*acceleration));
+		//if(c>1000)
+		//	 c=(int32_t)1001;
 		//c=(float)STEPPER_DRIVER_FREQUENCY/(acceleration);            //         *((2*MOTOR_STEP_ANGLE)/(acceleration));
 		//c=STEPPER_DRIVER_FREQUENCY*powf((2*MOTOR_STEP_ANGLE)/(acceleration),0.5);
 		accleration_prev=(*acceleration);
@@ -19,27 +27,10 @@ uint32_t calculate_next_step(float* acceleration,int8_t* stepper_direction, floa
 		return (uint32_t)c;
 	}
 
-	if((c<=200)&&((*acceleration)>0))
-	 {
-		accleration_prev=(*acceleration);
-		//n_prev=n;
-		return (uint32_t)200;
-	 }
-	if(c>2000)
-	 {
-	    c=(int32_t)2000;
-	    if ((*acceleration)<0)
-	    {
-	    	*stepper_direction=-(*stepper_direction);
-	    	*acceleration=-(*acceleration);
-	    	c=0;
-	    	n=1;
-	    	(*return_n)=n;
+	if ((*acceleration)==0)
+		return (uint32_t)c;
 
-	     }
-	    return (uint32_t) c;
 
-	  }
 
 	if ((*acceleration)!=accleration_prev)
     {
@@ -53,6 +44,29 @@ uint32_t calculate_next_step(float* acceleration,int8_t* stepper_direction, floa
     //limit_motor_speed(&c, &stepper_direction, &acceleration);
 
 
+	if((c<=50)&&((*(acceleration))>0))
+	 {
+		accleration_prev=(*acceleration);
+		//n_prev=n;
+		c=(int32_t)50;
+		// n--;
+		return c;
+	 }
+	if(c>1000)
+	 {
+	    c=(int32_t)1000;
+	    if ((*acceleration)<0)
+	    {
+	    	*stepper_direction=-(*stepper_direction);
+	    	*acceleration=-(*acceleration);
+	    	c=0;
+	    	n=1;//1
+	    	(*return_n)=n;
+
+	     }
+	    return (uint32_t) c;//c
+
+	  }
 
 
     accleration_prev=(*acceleration);

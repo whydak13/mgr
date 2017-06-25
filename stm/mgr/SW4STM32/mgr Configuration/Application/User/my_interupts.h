@@ -25,8 +25,8 @@ extern I2C_HandleTypeDef hi2c1;
 // Maski bitowe
 // CTRL_REG1_A = [ODR3][ODR2][ODR1][ODR0][LPEN][ZEN][YEN][XEN]
 #define LSM303_ACC_Z_ENABLE 0x07 // 0000 0100
-#define LSM303_ACC_100HZ 0x50 //0101 0000
-
+//#define LSM303_ACC_100HZ 0x50 //0101 0000
+#define LSM303_ACC_100HZ 0x60 //0110 0000 200HZ
 #define LSM303_ACC_RESOLUTION 2.0 // Maksymalna wartosc przyspieszenia [g]
 
 #define LSM303_ACC_X_L_A 0x28 // mlodszy bajt danych osi X

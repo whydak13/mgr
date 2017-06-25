@@ -36,7 +36,19 @@
 /* USER CODE BEGIN Includes */
 float global_n;
 float *pointer_to_n;
-
+float time_s=0;
+float angle=0;
+float comp_gain=0.002;
+float set_point;
+float speed_set_point=0;
+float speed=0;
+float speed_integral=0;
+float P=5;
+float I=0.01;
+float D=0.01;
+float error;
+float integral;
+float derivative;
 #include <math.h>
 #include <limits.h>
 #include "LIB_Config.h"
@@ -61,7 +73,7 @@ TIM_HandleTypeDef htim7;
 uint32_t steppers_cnt=0;
 uint32_t time_to_next_step=2;
 int8_t stepper_direction=1;
-float acceleration=5;
+float acceleration=0.05;
 TM_L3GD20_t L3GD20_Data;
 Acceleration_G_data LSM303_Data;
 // Global system variables
@@ -90,13 +102,17 @@ static void MX_TIM7_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_3);
+	//HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_3);
+	acceleration=-acceleration;
+	speed_integral=0;
+	integral=0;
 }
 
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
  if(htim->Instance == TIM6){ // Je¿eli przerwanie pochodzi od timera 6 200Hz
 	 float const dt=0.005;
+	 time_s+=0.005;
 	 //my_regulator_ict(acceleration);//,&hi2c1);
 	 //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
 	  // Pobranie 6 bajt7ow danych zawierajacych przyspieszenia w 3 osiach
@@ -108,12 +124,43 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	 //	filterUpdate(&L3GD20_Data, &LSM303_Data, &Magdewick_res);
 	 	MadgwickAHRSupdateIMU(gyro_X_speed, gyro_Y_speed, gyro_Z_speed, LSM303_Data.X, LSM303_Data.Y, LSM303_Data.Z);
 
-	 	pitch =( acosf(q0 / sqrt(q0*q0 + q2*q2)) * 2.0f - 1.570796327f)*57.2957795;
-	 	roll=atan2(+2.0 * (q0 * q1 + q2 * q3),+1.0 - 2.0 * (q1 * q1 + q2 * q2))*57.2957795;;
-	 	acceleration=-(roll*stepper_direction);
+		//MadgwickAHRSupdateIMU(gyro_Z_speed, gyro_Y_speed, -gyro_X_speed, LSM303_Data.Z, LSM303_Data.Y, LSM303_Data.X);
 
-	 	gyro_X_angle-=((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt;
-		accel_angle=atan2(LSM303_Data.X,LSM303_Data.Z)*57.2957795;
+		// calculate the pitch angle so that:    0 = vertical    -pi/2 = on its back    +pi/2 = on its face
+		pitch = asinf(-2.0f * (q1*q3 - q0*q2))*57.2957795;
+		if(time_to_next_step<5)
+			time_to_next_step=5;
+		speed=(float)((100.0*stepper_direction)/time_to_next_step);
+		speed_integral+= speed*dt;
+		set_point = -0.01*speed ;//- 0.00001*speed_integral  ;
+	 	//pitch =( acosf(q0 / sqrt(q0*q0 + q2*q2)) * 2.0f - 1.570796327f)*57.2957795;
+
+	 	roll=atan2f(+2.0 * (q0 * q1 + q2 * q3),+1.0 - 2.0 * (q1 * q1 + q2 * q2))*57.2957795;
+	 	gyro_X_angle+=((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt;
+		accel_angle=atan2f(LSM303_Data.X,LSM303_Data.Z)*-57.2957795;
+
+		angle=comp_gain*accel_angle+(1-comp_gain)*(angle+((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt);
+		//set_point=93;
+
+		 derivative=((set_point+93-angle)-error)/dt ;
+		 error = set_point+93-angle;
+		 integral += error*dt;
+
+		// acceleration = (P*error + I*integral + D*derivative)*stepper_direction ;
+
+
+
+	 	//acceleration=-2*(roll*stepper_direction);
+		//acceleration=2*(gyro_X_angle*stepper_direction);
+		/*if(error >10)
+			acceleration=0.000001;
+		if(error <-10)
+					acceleration=0.000001;*/
+	 	if (acceleration< -40)
+	 		acceleration=-40;
+	 	if (acceleration >30)
+	 		acceleration=30;
+
  }
  if(htim->Instance == TIM7){ // Je¿eli przerwanie pochodzi od timera 7 100 kHz
 	 steppers_cnt++;
@@ -156,6 +203,8 @@ int main(void)
   MX_TIM7_Init();
 
   /* USER CODE BEGIN 2 */
+  HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_3);
+ //HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_3); //////////TUUUUUUUU
   HAL_TIM_Base_Start_IT(&htim6);
   HAL_TIM_Base_Start_IT(&htim7);
   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, GPIO_PIN_SET);
@@ -290,7 +339,7 @@ void MX_TIM6_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 319;
+  htim6.Init.Prescaler = 359;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim6.Init.Period = 999;
   HAL_TIM_Base_Init(&htim6);
