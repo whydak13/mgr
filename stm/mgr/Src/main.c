@@ -34,6 +34,14 @@
 #include "stm32f3xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+typedef int bool;
+#define true 1
+#define false 0
+
+bool motors_on=false;
+uint16_t Analog[2];
+float Voltage=0;
+float Current=0;
 float global_n;
 float *pointer_to_n;
 float time_s=0;
@@ -43,9 +51,9 @@ float set_point;
 float speed_set_point=0;
 float speed=0;
 float speed_integral=0;
-float P=5;
-float I=0.01;
-float D=0.01;
+float P=50;
+float I=0.05;
+float D=0.5;
 float error;
 float integral;
 float derivative;
@@ -60,6 +68,9 @@ float derivative;
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc3;
+DMA_HandleTypeDef hdma_adc3;
+
 I2C_HandleTypeDef hi2c1;
 
 SPI_HandleTypeDef hspi1;
@@ -73,7 +84,7 @@ TIM_HandleTypeDef htim7;
 uint32_t steppers_cnt=0;
 uint32_t time_to_next_step=2;
 int8_t stepper_direction=1;
-float acceleration=0.05;
+float acceleration=0.1;
 TM_L3GD20_t L3GD20_Data;
 Acceleration_G_data LSM303_Data;
 // Global system variables
@@ -94,6 +105,8 @@ float roll=0;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
+static void MX_ADC3_Init(void);
 static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM6_Init(void);
@@ -102,8 +115,13 @@ static void MX_TIM7_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	//HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_3);
-	acceleration=-acceleration;
+	if(motors_on==true)
+	{	motors_on=false;
+		HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_SET);}
+	else
+		motors_on=true;
+
+	//acceleration=-acceleration;
 	speed_integral=0;
 	integral=0;
 }
@@ -132,7 +150,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			time_to_next_step=5;
 		speed=(float)((100.0*stepper_direction)/time_to_next_step);
 		speed_integral+= speed*dt;
-		set_point = -0.01*speed ;//- 0.00001*speed_integral  ;
+		set_point = -0.01*speed - 0.001*speed_integral  ;
 	 	//pitch =( acosf(q0 / sqrt(q0*q0 + q2*q2)) * 2.0f - 1.570796327f)*57.2957795;
 
 	 	roll=atan2f(+2.0 * (q0 * q1 + q2 * q3),+1.0 - 2.0 * (q1 * q1 + q2 * q2))*57.2957795;
@@ -146,20 +164,29 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		 error = set_point+93-angle;
 		 integral += error*dt;
 
-		// acceleration = (P*error + I*integral + D*derivative)*stepper_direction ;
-
-
-
+		 acceleration = (P*error + I*integral + D*derivative);//*stepper_direction ;
+		 if (motors_on)
+		 {
+			 if (fabs(error)>30)
+				 HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_SET);
+				speed_integral=0;
+				integral=0;
+			 else
+				 HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_RESET);
+		 }
 	 	//acceleration=-2*(roll*stepper_direction);
 		//acceleration=2*(gyro_X_angle*stepper_direction);
 		/*if(error >10)
 			acceleration=0.000001;
 		if(error <-10)
 					acceleration=0.000001;*/
-	 	if (acceleration< -40)
-	 		acceleration=-40;
-	 	if (acceleration >30)
-	 		acceleration=30;
+	 	if (acceleration< -125)
+	 		acceleration=-125;
+	 	if (acceleration >125)
+	 		acceleration=125;
+
+	 	Voltage=3*(((float)Analog[0])/409);
+	 	Current=3*(((float)Analog[1])/409);
 
  }
  if(htim->Instance == TIM7){ // Je¿eli przerwanie pochodzi od timera 7 100 kHz
@@ -197,6 +224,8 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_ADC3_Init();
   MX_I2C1_Init();
   MX_SPI1_Init();
   MX_TIM6_Init();
@@ -207,6 +236,7 @@ int main(void)
  //HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_3); //////////TUUUUUUUU
   HAL_TIM_Base_Start_IT(&htim6);
   HAL_TIM_Base_Start_IT(&htim7);
+  HAL_ADC_Start_DMA(&hadc3, Analog, 2);
   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, GPIO_PIN_SET);
 //GYRO INIT
   TM_L3GD20_Init(TM_L3GD20_Scale_250);
@@ -228,6 +258,12 @@ int main(void)
   {
 		HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_8);
 		HAL_Delay(500);
+		if (Voltage <12)
+		{	motors_on=false;
+			HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_10);
+			HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_11);
+			HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_12);
+		}
 	//	TM_L3GD20_INT_ReadSPI(L3GD20_REG_WHO_AM_I) ;
 		 //TM_L3GD20_Read(&L3GD20_Data);
 	 // float x =my_regulator_ict(0,&hi2c1);
@@ -287,6 +323,47 @@ void SystemClock_Config(void)
 
   /* SysTick_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+}
+
+/* ADC3 init function */
+void MX_ADC3_Init(void)
+{
+
+  ADC_ChannelConfTypeDef sConfig;
+
+    /**Common config 
+    */
+  hadc3.Instance = ADC3;
+  hadc3.Init.ClockPrescaler = ADC_CLOCKPRESCALER_PCLK_DIV4;
+  hadc3.Init.Resolution = ADC_RESOLUTION12b;
+  hadc3.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc3.Init.ContinuousConvMode = ENABLE;
+  hadc3.Init.DiscontinuousConvMode = DISABLE;
+  hadc3.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc3.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc3.Init.NbrOfConversion = 2;
+  hadc3.Init.DMAContinuousRequests = ENABLE;
+  hadc3.Init.EOCSelection = EOC_SINGLE_CONV;
+  hadc3.Init.LowPowerAutoWait = DISABLE;
+  hadc3.Init.Overrun = OVR_DATA_OVERWRITTEN;
+  HAL_ADC_Init(&hadc3);
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_7;
+  sConfig.Rank = 1;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.SamplingTime = ADC_SAMPLETIME_181CYCLES_5;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  HAL_ADC_ConfigChannel(&hadc3, &sConfig);
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_8;
+  sConfig.Rank = 2;
+  HAL_ADC_ConfigChannel(&hadc3, &sConfig);
+
 }
 
 /* I2C1 init function */
@@ -368,6 +445,20 @@ void MX_TIM7_Init(void)
 
 }
 
+/** 
+  * Enable DMA controller clock
+  */
+void MX_DMA_Init(void) 
+{
+  /* DMA controller clock enable */
+  __DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  HAL_NVIC_SetPriority(DMA2_Channel5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Channel5_IRQn);
+
+}
+
 /** Configure pins as 
         * Analog 
         * Input 
@@ -387,6 +478,7 @@ void MX_GPIO_Init(void)
   __GPIOC_CLK_ENABLE();
   __GPIOF_CLK_ENABLE();
   __GPIOA_CLK_ENABLE();
+  __GPIOD_CLK_ENABLE();
   __GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pins : DRDY_Pin MEMS_INT3_Pin MEMS_INT4_Pin MEMS_INT2_Pin */
