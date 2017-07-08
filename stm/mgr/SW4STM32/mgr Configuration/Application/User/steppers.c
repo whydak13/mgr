@@ -11,22 +11,13 @@ uint32_t calculate_next_step(float* acceleration,int8_t* stepper_direction, floa
 		(*acceleration)=accleration_prev;
 	}
 
-	/*if (n==-1)
-				{
-	    	(*stepper_direction)=-(*stepper_direction);
-	    	(*acceleration)=-(*acceleration);
-	    	accleration_prev=(*acceleration);
-				}*/
 	if ((c==0)||(fabs(n)<3)) // Init
 	{
 		c=(float)STEPPER_DRIVER_FREQUENCY*sqrtf((2*MOTOR_STEP_ANGLE)/fabs(*acceleration));
-		//c=(float)STEPPER_DRIVER_FREQUENCY/(acceleration);            //         *((2*MOTOR_STEP_ANGLE)/(acceleration));
-		//c=STEPPER_DRIVER_FREQUENCY*powf((2*MOTOR_STEP_ANGLE)/(acceleration),0.5);
 		if ((*acceleration) > 0)
 			(*stepper_direction)=1;
 		else
 			(*stepper_direction)=-1;
-		//(*stepper_direction)=((*acceleration) > 0) - ((*acceleration) < 0);//sign
 		if(c>5010)
 			c=5005;
 		accleration_prev=(*acceleration);
@@ -36,37 +27,11 @@ uint32_t calculate_next_step(float* acceleration,int8_t* stepper_direction, floa
 		return (uint32_t)c;
 	}
 
-	/*if (n==-1)// if ((*acceleration)<0)
-		    {
-		    	*stepper_direction=-(*stepper_direction);
-		    	*acceleration=-(*acceleration);
-		    	accleration_prev=(*acceleration);
-		    	c=0;
-		    	n=1;
-		    	(*return_n)=n;
 
-		     }
-*/
 
-/*
-	if((c<=100)&&((*acceleration)>0))
-	 {
-		accleration_prev=(*acceleration);
-		//n_prev=n;
-		return (uint32_t)100;
-	 }
-	if(c>2000)
-	 {
-	    c=(int32_t)2000;
-
-	    return (uint32_t) c;
-
-	  }
-*/
 
 	if ((*acceleration)!=accleration_prev)
     {
-		//n++;
         n=(n*accleration_prev)/(*acceleration);
         (*return_n)=n;
     }
@@ -75,7 +40,7 @@ uint32_t calculate_next_step(float* acceleration,int8_t* stepper_direction, floa
     	n++;
     }
 	tmp=(uint32_t)(c - (2*c)/(4*n+1));
-	if (tmp>80)
+	if (tmp>50)
 	{
 		c=tmp;
 	}
@@ -83,31 +48,6 @@ uint32_t calculate_next_step(float* acceleration,int8_t* stepper_direction, floa
 	{
 		n--;
 	}
-
-
-
-
-    	/*{
-    		c=100;
-    		n--;*
-    		c=(uint32_t)(c - (2*c)/(4*n+1));
-    	}
-    	else
-    		c=100;
-
-	if (n>100)
-		n=100;
-	if (n<-100)
-		n=-100;
-    //c=(uint32_t)(c - (2*c)/(4*n+1));
-    if((c<=100)&&((n)>1))
-    	 {
-    		n--;
-    	 }
-    if(c>5010)
-    			c=5005;*/
-    //limit_motor_speed(&c, &stepper_direction, &acceleration);
-
 
 
 

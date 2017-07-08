@@ -51,9 +51,9 @@ float set_point;
 float speed_set_point=0;
 float speed=0;
 float speed_integral=0;
-float P=50;
-float I=0.05;
-float D=0.5;
+float P=50;//40
+float I=0;
+float D=1.6;//1.6 z kablem 1.8 spoko bez
 float error;
 float integral;
 float derivative;
@@ -139,7 +139,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	 	gyro_X_speed =((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*0.0174532925;
 	 	gyro_Y_speed =((float)(L3GD20_Data.Y)*L3GD20_SENSITIVITY_250 * 0.001)*0.0174532925;
 	 	gyro_Z_speed =((float)(L3GD20_Data.Z)*L3GD20_SENSITIVITY_250 * 0.001)*0.0174532925;
-	 //	filterUpdate(&L3GD20_Data, &LSM303_Data, &Magdewick_res);
+
 	 	MadgwickAHRSupdateIMU(gyro_X_speed, gyro_Y_speed, gyro_Z_speed, LSM303_Data.X, LSM303_Data.Y, LSM303_Data.Z);
 
 		//MadgwickAHRSupdateIMU(gyro_Z_speed, gyro_Y_speed, -gyro_X_speed, LSM303_Data.Z, LSM303_Data.Y, LSM303_Data.X);
@@ -150,7 +150,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			time_to_next_step=5;
 		speed=(float)((100.0*stepper_direction)/time_to_next_step);
 		speed_integral+= speed*dt;
-		set_point = -0.01*speed - 0.001*speed_integral  ;
+		set_point = -0.1*speed -0.001*speed_integral  ; //-0.05*speed -0.01*speed_integral  ;
 	 	//pitch =( acosf(q0 / sqrt(q0*q0 + q2*q2)) * 2.0f - 1.570796327f)*57.2957795;
 
 	 	roll=atan2f(+2.0 * (q0 * q1 + q2 * q3),+1.0 - 2.0 * (q1 * q1 + q2 * q2))*57.2957795;
@@ -168,9 +168,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		 if (motors_on)
 		 {
 			 if (fabs(error)>30)
-				 HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_SET);
+			 { HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_SET);
 				speed_integral=0;
-				integral=0;
+				integral=0;}
 			 else
 				 HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_RESET);
 		 }
@@ -180,10 +180,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			acceleration=0.000001;
 		if(error <-10)
 					acceleration=0.000001;*/
-	 	if (acceleration< -125)
-	 		acceleration=-125;
-	 	if (acceleration >125)
-	 		acceleration=125;
+	 	if (acceleration< -205)
+	 		acceleration=-205;
+	 	if (acceleration >205)
+	 		acceleration=205;
 
 	 	Voltage=3*(((float)Analog[0])/409);
 	 	Current=3*(((float)Analog[1])/409);
