@@ -39,6 +39,7 @@ typedef int bool;
 #define false 0
 
 bool motors_on=false;
+bool battery_ok=true;
 uint16_t Analog[2];
 float Voltage=0;
 float Current=0;
@@ -46,14 +47,16 @@ float global_n;
 float *pointer_to_n;
 float time_s=0;
 float angle=0;
-float comp_gain=0.002;
+float comp_gain=0.005;
 float set_point;
 float speed_set_point=0;
 float speed=0;
 float speed_integral=0;
-float P=50;//40
-float I=0;
-float D=1.6;//1.6 z kablem 1.8 spoko bez
+float P=68;//40
+float I=36;
+float D=1.8;//1.6 z kablem 1.8 spoko bez
+float P_2=3;
+float I_2=0.22;
 float error;
 float integral;
 float derivative;
@@ -115,7 +118,7 @@ static void MX_TIM7_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	if(motors_on==true)
+	if ((motors_on==true)&&(battery_ok==true))
 	{	motors_on=false;
 		HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_SET);}
 	else
@@ -150,8 +153,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			time_to_next_step=5;
 		speed=(float)((100.0*stepper_direction)/time_to_next_step);
 		speed_integral+= speed*dt;
-		set_point = -0.1*speed -0.001*speed_integral  ; //-0.05*speed -0.01*speed_integral  ;
-	 	//pitch =( acosf(q0 / sqrt(q0*q0 + q2*q2)) * 2.0f - 1.570796327f)*57.2957795;
+		set_point = -P_2*speed -I_2*speed_integral  ; //-0.05*speed -0.01*speed_integral  ;
+	 	if (set_point< -3)
+	 		set_point=-3;
+	 	if (set_point >3)
+	 		set_point=3;
+
+
+		//pitch =( acosf(q0 / sqrt(q0*q0 + q2*q2)) * 2.0f - 1.570796327f)*57.2957795;
 
 	 	roll=atan2f(+2.0 * (q0 * q1 + q2 * q3),+1.0 - 2.0 * (q1 * q1 + q2 * q2))*57.2957795;
 	 	gyro_X_angle+=((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt;
@@ -160,14 +169,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		angle=comp_gain*accel_angle+(1-comp_gain)*(angle+((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt);
 		//set_point=93;
 
-		 derivative=((set_point+93-angle)-error)/dt ;
-		 error = set_point+93-angle;
+		 derivative=((set_point+88.57-angle)-error)/dt ;
+		 error = set_point+88.57-angle;
 		 integral += error*dt;
 
 		 acceleration = (P*error + I*integral + D*derivative);//*stepper_direction ;
 		 if (motors_on)
 		 {
-			 if (fabs(error)>30)
+			 if (fabs(error-set_point)>30)
 			 { HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_SET);
 				speed_integral=0;
 				integral=0;}
@@ -180,10 +189,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			acceleration=0.000001;
 		if(error <-10)
 					acceleration=0.000001;*/
-	 	if (acceleration< -205)
-	 		acceleration=-205;
-	 	if (acceleration >205)
-	 		acceleration=205;
+	 	if (acceleration< -300)
+	 		acceleration=-300;
+	 	if (acceleration >300)
+	 		acceleration=300;
 
 	 	Voltage=3*(((float)Analog[0])/409);
 	 	Current=3*(((float)Analog[1])/409);
@@ -258,8 +267,8 @@ int main(void)
   {
 		HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_8);
 		HAL_Delay(500);
-		if (Voltage <12)
-		{	motors_on=false;
+		if (Voltage <11)
+		{	battery_ok=false;
 			HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_10);
 			HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_11);
 			HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_12);
