@@ -43,8 +43,7 @@ bool battery_ok=true;
 uint16_t Analog[2];
 float Voltage=0;
 float Current=0;
-float global_n;
-float *pointer_to_n;
+float BalancePoint= 88.57;
 float time_s=0;
 float angle=0;
 float comp_gain=0.005;
@@ -91,7 +90,7 @@ float acceleration=0.1;
 TM_L3GD20_t L3GD20_Data;
 Acceleration_G_data LSM303_Data;
 // Global system variables
-Quaternion Magdewick_res={1,0,0,0};
+//Quaternion Magdewick_res={1,0,0,0};
 
 // estimated orientation quaternion elements with initial conditions
 float gyro_X_angle =0;
@@ -133,7 +132,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
  if(htim->Instance == TIM6){ // Je¿eli przerwanie pochodzi od timera 6 200Hz
 	 float const dt=0.005;
-	 time_s+=0.005;
+	 time_s+=dt;
 	 //my_regulator_ict(acceleration);//,&hi2c1);
 	 //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
 	  // Pobranie 6 bajt7ow danych zawierajacych przyspieszenia w 3 osiach
@@ -143,14 +142,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	 	gyro_Y_speed =((float)(L3GD20_Data.Y)*L3GD20_SENSITIVITY_250 * 0.001)*0.0174532925;
 	 	gyro_Z_speed =((float)(L3GD20_Data.Z)*L3GD20_SENSITIVITY_250 * 0.001)*0.0174532925;
 
-	 	MadgwickAHRSupdateIMU(gyro_X_speed, gyro_Y_speed, gyro_Z_speed, LSM303_Data.X, LSM303_Data.Y, LSM303_Data.Z);
-
-		//MadgwickAHRSupdateIMU(gyro_Z_speed, gyro_Y_speed, -gyro_X_speed, LSM303_Data.Z, LSM303_Data.Y, LSM303_Data.X);
+	 	//MadgwickAHRSupdateIMU(gyro_X_speed, gyro_Y_speed, gyro_Z_speed, LSM303_Data.X, LSM303_Data.Y, LSM303_Data.Z);
+		////MadgwickAHRSupdateIMU(gyro_Z_speed, gyro_Y_speed, -gyro_X_speed, LSM303_Data.Z, LSM303_Data.Y, LSM303_Data.X);
 
 		// calculate the pitch angle so that:    0 = vertical    -pi/2 = on its back    +pi/2 = on its face
-		pitch = asinf(-2.0f * (q1*q3 - q0*q2))*57.2957795;
+		//pitch = asinf(-2.0f * (q1*q3 - q0*q2))*57.2957795;
 		if(time_to_next_step<5)
 			time_to_next_step=5;
+
 		speed=(float)((100.0*stepper_direction)/time_to_next_step);
 		speed_integral+= speed*dt;
 		set_point = -P_2*speed -I_2*speed_integral  ; //-0.05*speed -0.01*speed_integral  ;
@@ -161,16 +160,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 
 		//pitch =( acosf(q0 / sqrt(q0*q0 + q2*q2)) * 2.0f - 1.570796327f)*57.2957795;
+	 	//roll=atan2f(+2.0 * (q0 * q1 + q2 * q3),+1.0 - 2.0 * (q1 * q1 + q2 * q2))*57.2957795;
 
-	 	roll=atan2f(+2.0 * (q0 * q1 + q2 * q3),+1.0 - 2.0 * (q1 * q1 + q2 * q2))*57.2957795;
-	 	gyro_X_angle+=((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt;
+	 	gyro_X_angle+=gyro_X_speed *dt;
 		accel_angle=atan2f(LSM303_Data.X,LSM303_Data.Z)*-57.2957795;
 
-		angle=comp_gain*accel_angle+(1-comp_gain)*(angle+((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt);
+		angle=comp_gain*accel_angle+(1-comp_gain)*(angle+((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt)-BalancePoint;
 		//set_point=93;
 
-		 derivative=((set_point+88.57-angle)-error)/dt ;
-		 error = set_point+88.57-angle;
+		 derivative=((set_point-angle)-error)/dt ;
+		 error = set_point-angle;
 		 integral += error*dt;
 
 		 acceleration = (P*error + I*integral + D*derivative);//*stepper_direction ;
@@ -182,7 +181,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 				integral=0;}
 			 else
 				 HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_RESET);
-		 }
+		 } else HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_SET);
 	 	//acceleration=-2*(roll*stepper_direction);
 		//acceleration=2*(gyro_X_angle*stepper_direction);
 		/*if(error >10)
@@ -203,7 +202,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	 if(steppers_cnt>time_to_next_step)
 	 {
 		 make_step(stepper_direction);
-		 time_to_next_step=calculate_next_step(&acceleration,&stepper_direction,&global_n);
+		 time_to_next_step=calculate_next_step(&acceleration,&stepper_direction);
 		 steppers_cnt=0;
 
 	 }
@@ -267,7 +266,7 @@ int main(void)
   {
 		HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_8);
 		HAL_Delay(500);
-		if (Voltage <11)
+		if (Voltage <10.5)
 		{	battery_ok=false;
 			HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_10);
 			HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_11);

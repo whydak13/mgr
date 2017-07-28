@@ -1,6 +1,6 @@
 #include "steppers.h"
 
-uint32_t calculate_next_step(float* acceleration,int8_t* stepper_direction, float *return_n)
+uint32_t calculate_next_step(float* acceleration,int8_t* stepper_direction)
 {
 	static float c=0;
 	static float n=1;
@@ -23,17 +23,12 @@ uint32_t calculate_next_step(float* acceleration,int8_t* stepper_direction, floa
 		accleration_prev=(*acceleration);
 		n=3;
 		//n++;
-		(*return_n)=n;
 		return (uint32_t)c;
 	}
-
-
-
 
 	if ((*acceleration)!=accleration_prev)
     {
         n=(n*accleration_prev)/(*acceleration);
-        (*return_n)=n;
     }
     else
     {
@@ -50,10 +45,9 @@ uint32_t calculate_next_step(float* acceleration,int8_t* stepper_direction, floa
 	}
 
 	if(c>10010)
-				c=10005;
+			c=10005;
 
     accleration_prev=(*acceleration);
-    (*return_n)=n;
     return (uint32_t)c;
 
 }
