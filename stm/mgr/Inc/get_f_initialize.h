@@ -2,7 +2,7 @@
  * File: get_f_initialize.h
  *
  * MATLAB Coder version            : 2.8
- * C/C++ source code generated on  : 06-Aug-2017 14:21:28
+ * C/C++ source code generated on  : 13-Aug-2017 17:54:11
  */
 
 #ifndef __GET_F_INITIALIZE_H__

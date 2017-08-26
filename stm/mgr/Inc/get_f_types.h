@@ -2,7 +2,7 @@
  * File: get_f_types.h
  *
  * MATLAB Coder version            : 2.8
- * C/C++ source code generated on  : 06-Aug-2017 14:21:28
+ * C/C++ source code generated on  : 13-Aug-2017 17:54:11
  */
 
 #ifndef __GET_F_TYPES_H__
@@ -33,12 +33,33 @@ typedef struct emxArray__common emxArray__common;
 
 #endif                                 /*typedef_emxArray__common*/
 
+#ifndef struct_emxArray_real32_T
+#define struct_emxArray_real32_T
+
+struct emxArray_real32_T
+{
+  float *data;
+  int *size;
+  int allocatedSize;
+  int numDimensions;
+  boolean_T canFreeData;
+};
+
+#endif                                 /*struct_emxArray_real32_T*/
+
+#ifndef typedef_emxArray_real32_T
+#define typedef_emxArray_real32_T
+
+typedef struct emxArray_real32_T emxArray_real32_T;
+
+#endif                                 /*typedef_emxArray_real32_T*/
+
 #ifndef struct_emxArray_real_T
 #define struct_emxArray_real_T
 
 struct emxArray_real_T
 {
-  float *data;
+  double *data;
   int *size;
   int allocatedSize;
   int numDimensions;

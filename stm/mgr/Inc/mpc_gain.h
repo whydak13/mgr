@@ -2,7 +2,7 @@
  * File: mpc_gain.h
  *
  * MATLAB Coder version            : 2.8
- * C/C++ source code generated on  : 06-Aug-2017 14:21:28
+ * C/C++ source code generated on  : 13-Aug-2017 17:54:11
  */
 
 #ifndef __MPC_GAIN_H__
@@ -20,7 +20,7 @@
 extern void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8],
                      float Nc, float Np, emxArray_real_T *Phi, emxArray_real_T
                      *Phi_Phi, emxArray_real_T *Phi_F, emxArray_real_T *Phi_R,
-                     float A_e[36], float B_e[6], float C_e[12],
+                     double A_e[36], double B_e[6], double C_e[12],
                      emxArray_real_T *F);
 
 #endif
