@@ -17,31 +17,30 @@
  * |----------------------------------------------------------------------
  */
 #include "tm_stm32f4_l3gd20.h"
-#include "stm32f3xx_hal.h"
+
 /* Private variables */
 TM_L3GD20_Scale_t TM_L3GD20_INT_Scale;
 
 /* Private functions */
-//extern void TM_L3GD20_INT_InitPins(void);
+extern void TM_L3GD20_INT_InitPins(void);
 extern uint8_t TM_L3GD20_INT_ReadSPI(uint8_t address);
 extern void TM_L3GD20_INT_WriteSPI(uint8_t address, uint8_t data);
 
 /* Public */
-/* Public */
 TM_L3GD20_Result_t TM_L3GD20_Init(TM_L3GD20_Scale_t scale) {
 	/* Init CS pin */
-		L3GD20_CS_HIGH;
-
+	TM_L3GD20_INT_InitPins();
+	/* Init SPI */
+	TM_SPI_Init(L3GD20_SPI, L3GD20_SPI_PINSPACK);
 	/* Check if sensor is L3GD20 */
 	if (TM_L3GD20_INT_ReadSPI(L3GD20_REG_WHO_AM_I) != L3GD20_WHO_AM_I) {
 		/* Sensor connected is not L3GD20 */
 		return TM_L3GD20_Result_Error;
 	}
 
-
 	/* Enable L3GD20 Power bit */
-	//TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG1, 0xFF);
-	TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG1, 0x4F);
+	TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG1, 0xFF);
+
 	/* Set L3GD20 scale */
 	if (scale == TM_L3GD20_Scale_250) {
 		TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG4, 0x00);
@@ -55,11 +54,10 @@ TM_L3GD20_Result_t TM_L3GD20_Init(TM_L3GD20_Scale_t scale) {
 	TM_L3GD20_INT_Scale = scale;
 
 	/* Set high-pass filter settings */
-	//TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG2, 0x00);
-	TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG2, 0x09);
+	TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG2, 0x00);
+
 	/* Enable high-pass filter */
-	//TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG5, 0x10);
-	TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG5, 0x00);
+	TM_L3GD20_INT_WriteSPI(L3GD20_REG_CTRL_REG5, 0x10);
 	
 	/* Everything OK */
 	return TM_L3GD20_Result_Ok;
@@ -91,49 +89,47 @@ TM_L3GD20_Result_t TM_L3GD20_Read(TM_L3GD20_t* L3DG20_Data) {
 		/* Sensitivity at 2000 range = 70 mdps/digit */
 		s = L3GD20_SENSITIVITY_2000 * 0.001;
 	}
-
-	//temp = (float)L3DG20_Data->X * s;
-	//L3DG20_Data->X = (int16_t) temp;
-	//temp = (float)L3DG20_Data->Y * s;
-	//L3DG20_Data->Y = (int16_t) temp;
-	//temp = (float)L3DG20_Data->Z * s;
-	//L3DG20_Data->Z = (int16_t) temp;
 	
+	temp = (float)L3DG20_Data->X * s;
+	L3DG20_Data->X = (int16_t) temp;
+	temp = (float)L3DG20_Data->Y * s;
+	L3DG20_Data->Y = (int16_t) temp;
+	temp = (float)L3DG20_Data->Z * s;
+	L3DG20_Data->Z = (int16_t) temp;
+
 	/* Return OK */
 	return TM_L3GD20_Result_Ok;
 }
 
 /* Private functions */
-
+void TM_L3GD20_INT_InitPins(void) {
+	/* Init CS pin for SPI */
+	TM_GPIO_Init(L3GD20_CS_PORT, L3GD20_CS_PIN, TM_GPIO_Mode_OUT, TM_GPIO_OType_PP, TM_GPIO_PuPd_UP, TM_GPIO_Speed_Low);
+	/* Set CS high */
+	L3GD20_CS_HIGH;
+}
 
 uint8_t TM_L3GD20_INT_ReadSPI(uint8_t address) {
-	uint8_t data=0;
-    uint16_t ReadData;
-    uint16_t WriteData;
-
-    L3GD20_CS_LOW;
-    WriteData =((uint16_t)address)<<8;
-    WriteData =WriteData | 0x8000;
-    HAL_SPI_TransmitReceive(&hspi1, &WriteData, &ReadData, 1, HAL_MAX_DELAY);
-
-    //(ReadData == 0xffd4)
-    data	=(uint8_t)ReadData;
-    L3GD20_CS_HIGH;
+	uint8_t data;
+	/* CS low */
+	L3GD20_CS_LOW;
+	/* Send address with read command */
+	TM_SPI_Send(L3GD20_SPI, address | 0x80);
+	/* Read data */
+	data = TM_SPI_Send(L3GD20_SPI, 0xFF);
+	/* CS high */
+	L3GD20_CS_HIGH;
+	/* Return data */
 	return data;
 }
 
 void TM_L3GD20_INT_WriteSPI(uint8_t address, uint8_t data) {
 	/* CS low */
 	L3GD20_CS_LOW;
-	uint8_t TxData[2];
-    uint16_t WriteData;
-
-    TxData[0]=address;
-	TxData[1]=data;
-	WriteData =((uint16_t)address)<<8;
-	WriteData =WriteData | data;
-	HAL_SPI_Transmit(&hspi1, &WriteData, 1, HAL_MAX_DELAY);
-
+	/* Send address with write command */
+	TM_SPI_Send(L3GD20_SPI, address);
+	/* Write data */
+	TM_SPI_Send(L3GD20_SPI, data);
+	/* CS high */
 	L3GD20_CS_HIGH;
 }
-
