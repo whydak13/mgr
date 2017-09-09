@@ -2,7 +2,7 @@
  * File: mpc_gain.c
  *
  * MATLAB Coder version            : 2.8
- * C/C++ source code generated on  : 13-Aug-2017 17:54:11
+ * C/C++ source code generated on  : 06-Aug-2017 14:21:28
  */
 
 /* Include Files */
@@ -59,11 +59,11 @@ static int div_nzp_s32_floor(int numerator, int denominator)
 }
 
 /*
- * Arguments    : const float Ap[16]
- *                const float Bp[4]
- *                const float Cp[8]
- *                float Nc
- *                float Np
+ * Arguments    : const double Ap[16]
+ *                const double Bp[4]
+ *                const double Cp[8]
+ *                double Nc
+ *                double Np
  *                emxArray_real_T *Phi
  *                emxArray_real_T *Phi_Phi
  *                emxArray_real_T *Phi_F
@@ -74,10 +74,10 @@ static int div_nzp_s32_floor(int numerator, int denominator)
  *                emxArray_real_T *F
  * Return Type  : void
  */
-void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc,
-              float Np, emxArray_real_T *Phi, emxArray_real_T *Phi_Phi,
-              emxArray_real_T *Phi_F, emxArray_real_T *Phi_R, double A_e[36],
-              double B_e[6], double C_e[12], emxArray_real_T *F)
+void mpc_gain(const double Ap[16], const double Bp[4], const double Cp[8],
+              double Nc, double Np, emxArray_real_T *Phi, emxArray_real_T
+              *Phi_Phi, emxArray_real_T *Phi_F, emxArray_real_T *Phi_R, double
+              A_e[36], double B_e[6], double C_e[12], emxArray_real_T *F)
 {
   static const double dv0[36] = { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
@@ -85,16 +85,16 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
 
   int i0;
   int i1;
-  float f0;
   int i2;
   int k;
   static const signed char iv0[4] = { 1, 0, 0, 1 };
 
   emxArray_real_T *h;
-  float y;
   int cr;
   int kk;
   emxArray_real_T *C;
+  double d0;
+  double d1;
   int m;
   int c;
   int ic;
@@ -122,12 +122,10 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
   /* 'mpc_gain:6' A_e(n1+1:n1+m1,1:n1)=Cp*Ap; */
   for (i0 = 0; i0 < 2; i0++) {
     for (i1 = 0; i1 < 4; i1++) {
-      f0 = 0.0F;
+      A_e[(i0 + 6 * i1) + 4] = 0.0;
       for (i2 = 0; i2 < 4; i2++) {
-        f0 += Cp[i0 + (i2 << 1)] * Ap[i2 + (i1 << 2)];
+        A_e[(i0 + 6 * i1) + 4] += Cp[i0 + (i2 << 1)] * Ap[i2 + (i1 << 2)];
       }
-
-      A_e[(i0 + 6 * i1) + 4] = f0;
     }
   }
 
@@ -143,12 +141,10 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
 
   /* 'mpc_gain:9' B_e(n1+1:n1+m1,:)=Cp*Bp; */
   for (i0 = 0; i0 < 2; i0++) {
-    f0 = 0.0F;
+    B_e[4 + i0] = 0.0;
     for (i1 = 0; i1 < 4; i1++) {
-      f0 += Cp[i0 + (i1 << 1)] * Bp[i1];
+      B_e[4 + i0] += Cp[i0 + (i1 << 1)] * Bp[i1];
     }
-
-    B_e[4 + i0] = f0;
   }
 
   /* 'mpc_gain:10' C_e=zeros(m1,n1+m1); */
@@ -167,23 +163,21 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
 
   /* 'mpc_gain:12' n=n1+m1; */
   /* 'mpc_gain:13' h=zeros(m1*Np,n); */
-  y = 2.0F * Np;
   i0 = h->size[0] * h->size[1];
-  h->size[0] = (int)y;
+  h->size[0] = (int)(2.0 * Np);
   h->size[1] = 6;
   emxEnsureCapacity((emxArray__common *)h, i0, (int)sizeof(double));
-  cr = (int)y * 6;
+  cr = (int)(2.0 * Np) * 6;
   for (i0 = 0; i0 < cr; i0++) {
     h->data[i0] = 0.0;
   }
 
   /* 'mpc_gain:14' F=zeros(m1*Np,n); */
-  y = 2.0F * Np;
   i0 = F->size[0] * F->size[1];
-  F->size[0] = (int)y;
+  F->size[0] = (int)(2.0 * Np);
   F->size[1] = 6;
   emxEnsureCapacity((emxArray__common *)F, i0, (int)sizeof(double));
-  cr = (int)y * 6;
+  cr = (int)(2.0 * Np) * 6;
   for (i0 = 0; i0 < cr; i0++) {
     F->data[i0] = 0.0;
   }
@@ -208,24 +202,24 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
   /* 'mpc_gain:18' for kk=2:Np */
   kk = 0;
   emxInit_real_T(&C, 2);
-  while (kk <= (int)(Np + -1.0F) - 1) {
+  while (kk <= (int)(Np + -1.0) - 1) {
     /* <------------- */
     /* 'mpc_gain:19' h((m1*(kk-1)+1):m1*(kk),:)=h((m1*(kk-2)+1):m1*(kk-1),:)*A_e; */
-    y = 2.0F * ((2.0F + (float)kk) - 2.0F);
-    f0 = 2.0F * ((2.0F + (float)kk) - 1.0F);
-    if (y + 1.0F > f0) {
+    d0 = 2.0 * ((2.0 + (double)kk) - 2.0) + 1.0;
+    d1 = 2.0 * ((2.0 + (double)kk) - 1.0);
+    if (d0 > d1) {
       i0 = 1;
       i1 = 1;
     } else {
-      i0 = (int)(y + 1.0F);
-      i1 = (int)f0 + 1;
+      i0 = (int)d0;
+      i1 = (int)d1 + 1;
     }
 
-    y = 2.0F * ((2.0F + (float)kk) - 1.0F);
-    if (y + 1.0F > 2.0F * (2.0F + (float)kk)) {
+    d0 = 2.0 * ((2.0 + (double)kk) - 1.0) + 1.0;
+    if (d0 > 2.0 * (2.0 + (double)kk)) {
       i2 = 0;
     } else {
-      i2 = (int)(y + 1.0F) - 1;
+      i2 = (int)d0 - 1;
     }
 
     m = i1 - i0;
@@ -282,21 +276,21 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
     }
 
     /* 'mpc_gain:20' F((m1*(kk-1)+1):m1*(kk),:)= F((m1*(kk-2)+1):m1*(kk-1),:)*A_e; */
-    y = 2.0F * ((2.0F + (float)kk) - 2.0F);
-    f0 = 2.0F * ((2.0F + (float)kk) - 1.0F);
-    if (y + 1.0F > f0) {
+    d0 = 2.0 * ((2.0 + (double)kk) - 2.0) + 1.0;
+    d1 = 2.0 * ((2.0 + (double)kk) - 1.0);
+    if (d0 > d1) {
       i0 = 1;
       i1 = 1;
     } else {
-      i0 = (int)(y + 1.0F);
-      i1 = (int)f0 + 1;
+      i0 = (int)d0;
+      i1 = (int)d1 + 1;
     }
 
-    y = 2.0F * ((2.0F + (float)kk) - 1.0F);
-    if (y + 1.0F > 2.0F * (2.0F + (float)kk)) {
+    d0 = 2.0 * ((2.0 + (double)kk) - 1.0) + 1.0;
+    if (d0 > 2.0 * (2.0 + (double)kk)) {
       i2 = 0;
     } else {
-      i2 = (int)(y + 1.0F) - 1;
+      i2 = (int)d0 - 1;
     }
 
     m = i1 - i0;
@@ -408,12 +402,11 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
   emxFree_real_T(&h);
 
   /* 'mpc_gain:28' Phi=zeros(Np*m1,Nc); */
-  y = Np * 2.0F;
   i0 = Phi->size[0] * Phi->size[1];
-  Phi->size[0] = (int)y;
+  Phi->size[0] = (int)(Np * 2.0);
   Phi->size[1] = (int)Nc;
   emxEnsureCapacity((emxArray__common *)Phi, i0, (int)sizeof(double));
-  cr = (int)y * (int)Nc;
+  cr = (int)(Np * 2.0) * (int)Nc;
   for (i0 = 0; i0 < cr; i0++) {
     Phi->data[i0] = 0.0;
   }
@@ -427,24 +420,22 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
 
   /*  first column of Phi */
   /* 'mpc_gain:31' for i=2:Nc */
-  for (k = 0; k < (int)(Nc + -1.0F); k++) {
+  for (k = 0; k < (int)(Nc + -1.0); k++) {
     /* 'mpc_gain:32' Phi(:,i)=[zeros(m1*(i-1),1);v(1:m1*(Np-i+1),1)]; */
-    f0 = 2.0F * ((Np - (2.0F + (float)k)) + 1.0F);
-    if (1.0F > f0) {
+    d0 = 2.0 * ((Np - (2.0 + (double)k)) + 1.0);
+    if (1.0 > d0) {
       cr = -1;
     } else {
-      cr = (int)f0 - 1;
+      cr = (int)d0 - 1;
     }
 
-    y = 2.0F * ((2.0F + (float)k) - 1.0F);
-    kk = (int)y;
+    kk = (int)(2.0 * ((2.0 + (double)k) - 1.0));
     for (i0 = 0; i0 < kk; i0++) {
-      Phi->data[i0 + Phi->size[0] * ((int)(2.0F + (float)k) - 1)] = 0.0;
+      Phi->data[i0 + Phi->size[0] * (k + 1)] = 0.0;
     }
 
     for (i0 = 0; i0 <= cr; i0++) {
-      Phi->data[(i0 + (int)y) + Phi->size[0] * ((int)(2.0F + (float)k) - 1)] =
-        v->data[i0];
+      Phi->data[(i0 + kk) + Phi->size[0] * (k + 1)] = v->data[i0];
     }
 
     /* Toeplitz matrix */
@@ -461,8 +452,8 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
   emxEnsureCapacity((emxArray__common *)a, i0, (int)sizeof(double));
   cr = Phi->size[0];
   for (i0 = 0; i0 < cr; i0++) {
-    kk = Phi->size[1];
-    for (i1 = 0; i1 < kk; i1++) {
+    k = Phi->size[1];
+    for (i1 = 0; i1 < k; i1++) {
       a->data[i1 + a->size[0] * i0] = Phi->data[i0 + Phi->size[0] * i1];
     }
   }
@@ -474,11 +465,11 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
     emxEnsureCapacity((emxArray__common *)Phi_Phi, i0, (int)sizeof(double));
     cr = a->size[0];
     for (i0 = 0; i0 < cr; i0++) {
-      kk = Phi->size[1];
-      for (i1 = 0; i1 < kk; i1++) {
+      k = Phi->size[1];
+      for (i1 = 0; i1 < k; i1++) {
         Phi_Phi->data[i0 + Phi_Phi->size[0] * i1] = 0.0;
-        k = a->size[1];
-        for (i2 = 0; i2 < k; i2++) {
+        kk = a->size[1];
+        for (i2 = 0; i2 < kk; i2++) {
           Phi_Phi->data[i0 + Phi_Phi->size[0] * i1] += a->data[i0 + a->size[0] *
             i2] * Phi->data[i2 + Phi->size[0] * i1];
         }
@@ -544,8 +535,8 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
   emxEnsureCapacity((emxArray__common *)a, i0, (int)sizeof(double));
   cr = Phi->size[0];
   for (i0 = 0; i0 < cr; i0++) {
-    kk = Phi->size[1];
-    for (i1 = 0; i1 < kk; i1++) {
+    k = Phi->size[1];
+    for (i1 = 0; i1 < k; i1++) {
       a->data[i1 + a->size[0] * i0] = Phi->data[i0 + Phi->size[0] * i1];
     }
   }
@@ -559,8 +550,8 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
     for (i0 = 0; i0 < cr; i0++) {
       for (i1 = 0; i1 < 6; i1++) {
         Phi_F->data[i0 + Phi_F->size[0] * i1] = 0.0;
-        kk = a->size[1];
-        for (i2 = 0; i2 < kk; i2++) {
+        k = a->size[1];
+        for (i2 = 0; i2 < k; i2++) {
           Phi_F->data[i0 + Phi_F->size[0] * i1] += a->data[i0 + a->size[0] * i2]
             * F->data[i2 + F->size[0] * i1];
         }
@@ -623,13 +614,13 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
   emxEnsureCapacity((emxArray__common *)a, i0, (int)sizeof(double));
   cr = Phi->size[0];
   for (i0 = 0; i0 < cr; i0++) {
-    kk = Phi->size[1];
-    for (i1 = 0; i1 < kk; i1++) {
+    k = Phi->size[1];
+    for (i1 = 0; i1 < k; i1++) {
       a->data[i1 + a->size[0] * i0] = Phi->data[i0 + Phi->size[0] * i1];
     }
   }
 
-  if ((a->size[1] == 1) || ((int)(Np * 2.0F) == 1)) {
+  if ((a->size[1] == 1) || ((int)(Np * 2.0) == 1)) {
     i0 = Phi_R->size[0] * Phi_R->size[1];
     Phi_R->size[0] = a->size[0];
     Phi_R->size[1] = 2;
@@ -638,8 +629,8 @@ void mpc_gain(const float Ap[16], const float Bp[4], const float Cp[8], float Nc
     for (i0 = 0; i0 < cr; i0++) {
       for (i1 = 0; i1 < 2; i1++) {
         Phi_R->data[i0 + Phi_R->size[0] * i1] = 0.0;
-        kk = a->size[1];
-        for (i2 = 0; i2 < kk; i2++) {
+        k = a->size[1];
+        for (i2 = 0; i2 < k; i2++) {
           Phi_R->data[i0 + Phi_R->size[0] * i1] += a->data[i0 + a->size[0] * i2];
         }
       }

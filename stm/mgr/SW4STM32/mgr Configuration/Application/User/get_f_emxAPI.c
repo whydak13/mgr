@@ -2,7 +2,7 @@
  * File: get_f_emxAPI.c
  *
  * MATLAB Coder version            : 2.8
- * C/C++ source code generated on  : 13-Aug-2017 17:54:11
+ * C/C++ source code generated on  : 06-Aug-2017 14:21:28
  */
 
 /* Include Files */
@@ -31,19 +31,19 @@ emxArray_real_T *emxCreateND_real_T(int numDimensions, int *size)
     emx->size[i] = size[i];
   }
 
-  emx->data = (double *)calloc((unsigned int)numEl, sizeof(double));
+  emx->data = (float *)calloc((unsigned int)numEl, sizeof(float));
   emx->numDimensions = numDimensions;
   emx->allocatedSize = numEl;
   return emx;
 }
 
 /*
- * Arguments    : double *data
+ * Arguments    : float *data
  *                int numDimensions
  *                int *size
  * Return Type  : emxArray_real_T *
  */
-emxArray_real_T *emxCreateWrapperND_real_T(double *data, int numDimensions, int *
+emxArray_real_T *emxCreateWrapperND_real_T(float *data, int numDimensions, int *
   size)
 {
   emxArray_real_T *emx;
@@ -64,12 +64,12 @@ emxArray_real_T *emxCreateWrapperND_real_T(double *data, int numDimensions, int 
 }
 
 /*
- * Arguments    : double *data
+ * Arguments    : float *data
  *                int rows
  *                int cols
  * Return Type  : emxArray_real_T *
  */
-emxArray_real_T *emxCreateWrapper_real_T(double *data, int rows, int cols)
+emxArray_real_T *emxCreateWrapper_real_T(float *data, int rows, int cols)
 {
   emxArray_real_T *emx;
   int size[2];
@@ -111,7 +111,7 @@ emxArray_real_T *emxCreate_real_T(int rows, int cols)
     emx->size[i] = size[i];
   }
 
-  emx->data = (double *)calloc((unsigned int)numEl, sizeof(double));
+  emx->data = (float *)calloc((unsigned int)numEl, sizeof(float));
   emx->numDimensions = 2;
   emx->allocatedSize = numEl;
   return emx;
