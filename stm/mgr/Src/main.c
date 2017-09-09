@@ -38,6 +38,7 @@ typedef int bool;
 #define true 1
 #define false 0
 
+#define WHEEL_INTERTIA 2.2456e-05
 bool motors_on=false;
 bool battery_ok=true;
 uint16_t Analog[2];
@@ -48,7 +49,7 @@ float time_s=0;
 float angle=0;
 float angle_correction;
 float comp_gain=0.005;
-float set_point;
+float set_point=0;
 float speed_set_point=0;
 float speed=0;
 float speed_integral=0;
@@ -72,6 +73,7 @@ float derivative;
 #include "G:\Studia\Mgr\mgr\stm\mgr\SW4STM32\mgr Configuration\Application\User\MadgwickAHRS.h"
 #include "my_interupts.h"
 #include "tm_stm32f4_l3gd20.h"
+<<<<<<< HEAD
 /* Generated code includes */
 /*#include "G:\Studia\Mgr\Sim\MPC_C_GEN\codegen\lib\get_f\rtwtypes.h"
 #include "G:\Studia\Mgr\Sim\MPC_C_GEN\codegen\lib\get_f\get_f_types.h"
@@ -80,6 +82,10 @@ float derivative;
 #include "G:\Studia\Mgr\Sim\MPC_C_GEN\codegen\lib\get_f\mpc_gain.h"
 #include "G:\Studia\Mgr\Sim\MPC_C_GEN\codegen\lib\get_f\get_f_emxAPI.h"
 #include "G:\Studia\Mgr\Sim\MPC_C_GEN\codegen\lib\get_f\get_f_initialize.h"*/
+=======
+
+
+>>>>>>> origin/master
 
 
 /* USER CODE END Includes */
@@ -89,6 +95,7 @@ ADC_HandleTypeDef hadc3;
 DMA_HandleTypeDef hdma_adc3;
 
 I2C_HandleTypeDef hi2c1;
+DMA_HandleTypeDef hdma_i2c1_rx;
 
 SPI_HandleTypeDef hspi1;
 
@@ -119,7 +126,30 @@ float pitch=0;
 float roll=0;
 /// MPC VARIABLES/////////////////////
 float Np = 15;
+<<<<<<< HEAD
 const float r[2]={0, 10};
+=======
+<<<<<<< HEAD
+const float r[2]={0, 0};
+const float F[180]={
+		0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,
+		-0.019154,1.002771,-0.035982,2.011563,-0.045803,3.028297,-0.047792,4.054551,-0.041997,5.091798,-0.028647,6.141457,-0.007993,7.204910,0.019725,8.283512,0.054284,9.378592,0.095486,10.491456,0.143148,11.623393,0.197107,12.775676,0.257217,13.949564,0.323350,15.146308,0.395391,16.367150,
+		0.023148,0.001353,0.040760,0.005149,0.056536,0.011564,0.071371,0.020569,0.085515,0.032095,0.099059,0.046070,0.112062,0.062424,0.124569,0.081097,0.136622,0.102032,0.148260,0.125179,0.159519,0.150495,0.170433,0.177942,0.181036,0.207486,0.191358,0.239100,0.201428,0.272760,
+		0.012898,0.003998,0.028192,0.011083,0.043501,0.020974,0.058316,0.033541,0.072557,0.048693,0.086243,0.066356,0.099414,0.086465,0.112111,0.108961,0.124373,0.133792,0.136240,0.160914,0.147748,0.190286,0.158930,0.221875,0.169819,0.255651,0.180445,0.291590,0.190838,0.329673,
+		1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,
+		0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000,0.000000,1.000000};
+float X_act[6] ={
+		  0.000000, //phi
+		  0.000000, //etha
+		  0.000000, //d phi
+		  0.000000, //d etha
+		  0.000000, // wheel speed out
+		  0.000000 }; //etha out
+float X_prev[6];
+float X_diff[6];
+=======
+const float r[2]={0.1, 0};
+>>>>>>> origin/master
 const float F[180]={
 		0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,
 		-0.019154,1.002771,-0.035982,2.011563,-0.045803,3.028297,-0.047792,4.054551,-0.041997,5.091798,-0.028647,6.141457,-0.007993,7.204910,0.019725,8.283512,0.054284,9.378592,0.095486,10.491456,0.143148,11.623393,0.197107,12.775676,0.257217,13.949564,0.323350,15.146308,0.395391,16.367150,
@@ -134,6 +164,7 @@ const float Xf[6] ={
 		  0.000000,
 		  0.000000,
 		  0.000000 };
+>>>>>>> parent of c04c5fa... PID backup
 const float Phi[90]={
 		-0.259245,0.020149,-0.309054,0.058948,-0.310690,0.104093,-0.301390,0.152728,-0.289734,0.204182,-0.277682,0.258295,-0.265665,0.315027,-0.253760,0.374371,-0.241966,0.436329,-0.230263,0.500912,-0.218628,0.568132,-0.207037,0.638008,-0.195470,0.710562,-0.183904,0.785819,-0.172319,0.863809,
 		0.000000,0.000000,-0.259245,0.020149,-0.309054,0.058948,-0.310690,0.104093,-0.301390,0.152728,-0.289734,0.204182,-0.277682,0.258295,-0.265665,0.315027,-0.253760,0.374371,-0.241966,0.436329,-0.230263,0.500912,-0.218628,0.568132,-0.207037,0.638008,-0.195470,0.710562,-0.183904,0.785819,
@@ -192,10 +223,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+<<<<<<< HEAD
  if(htim->Instance == TIM6){ // JeÂ¿eli przerwanie pochodzi od timera 6 200Hz
 	 float const dt=0.005;
+=======
+ if(htim->Instance == TIM6){ // Je¿eli przerwanie pochodzi od timera 6 100Hz
+	 float const dt=0.01;
+>>>>>>> origin/master
 	 time_s+=dt;
-	 //my_regulator_ict(acceleration);//,&hi2c1);
+
 	 //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
 	  // Pobranie 6 bajt7ow danych zawierajacych przyspieszenia w 3 osiach
 	  	TM_L3GD20_Read(&L3GD20_Data);
@@ -204,30 +240,47 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	 	gyro_Y_speed =((float)(L3GD20_Data.Y)*L3GD20_SENSITIVITY_250 * 0.001)*0.0174532925;
 	 	gyro_Z_speed =((float)(L3GD20_Data.Z)*L3GD20_SENSITIVITY_250 * 0.001)*0.0174532925;
 
-	 	//MadgwickAHRSupdateIMU(gyro_X_speed, gyro_Y_speed, gyro_Z_speed, LSM303_Data.X, LSM303_Data.Y, LSM303_Data.Z);
-		////MadgwickAHRSupdateIMU(gyro_Z_speed, gyro_Y_speed, -gyro_X_speed, LSM303_Data.Z, LSM303_Data.Y, LSM303_Data.X);
-
-		// calculate the pitch angle so that:    0 = vertical    -pi/2 = on its back    +pi/2 = on its face
-		//pitch = asinf(-2.0f * (q1*q3 - q0*q2))*57.2957795;
 		if(time_to_next_step<5)
 			time_to_next_step=5;
 
-		speed=(float)((100.0*stepper_direction)/time_to_next_step);
+		speed=(float)((GET_WHEEL_SPEED_FACTOR*stepper_direction)/time_to_next_step);
 		speed_integral+= speed*dt;
-		set_point = -P_2*speed -I_2*speed_integral  ; //-0.05*speed -0.01*speed_integral  ;
-	 	if (set_point< -3)
-	 		set_point=-3;
-	 	if (set_point >3)
-	 		set_point=3;
-
-
-		//pitch =( acosf(q0 / sqrt(q0*q0 + q2*q2)) * 2.0f - 1.570796327f)*57.2957795;
-	 	//roll=atan2f(+2.0 * (q0 * q1 + q2 * q3),+1.0 - 2.0 * (q1 * q1 + q2 * q2))*57.2957795;
 
 	 	gyro_X_angle+=gyro_X_speed *dt;
 		accel_angle=atan2f(LSM303_Data.X,LSM303_Data.Z)*-57.2957795;
 
 		angle=comp_gain*accel_angle+(1-comp_gain)*(angle+((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*dt);//-BalancePoint;
+<<<<<<< HEAD
+
+		angle_correction=angle-BalancePoint;
+		derivative=((set_point-angle_correction)-error)/dt ;
+		error = set_point-angle_correction;
+		integral += error*dt;
+
+		X_act[0]=angle_correction;
+		X_act[1]=speed_integral;
+		X_act[2]=gyro_X_speed;
+		X_act[3]=speed;
+		X_act[4]=speed* R_WHEEL;
+		X_act[5]=angle_correction;
+
+		float X_prev[6];
+
+		for(int i=0;i<4;i++)
+		{
+			X_diff[i]=X_act[i]-X_prev[i];
+		}
+		X_diff[4]=speed* R_WHEEL;
+		X_diff[5]=angle_correction;
+		/* get_f(Np,  r,  F, X_diff,Phi, f);
+		 QPhild2(H, f, A_cons,b, eta);
+		// acceleration = (P*error + I*integral + D*derivative);//*stepper_direction ;
+		 for(int i=0;i<4;i++)
+		 {
+		 	X_prev[i]=X_act[i];
+		 }
+
+=======
 		//set_point=93;
 		angle_correction=angle-BalancePoint;
 		 derivative=((set_point-angle_correction)-error)/dt ;
@@ -235,8 +288,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		 integral += error*dt;
 
 		 acceleration = (P*error + I*integral + D*derivative);//*stepper_direction ;
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> parent of c04c5fa... PID backup
+>>>>>>> origin/master
 		 if (motors_on)
 		 {
 			 if (fabs(error-set_point)>30)
@@ -246,12 +303,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			 else
 				 HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_RESET);
 		 } else HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_SET);
-	 	//acceleration=-2*(roll*stepper_direction);
-		//acceleration=2*(gyro_X_angle*stepper_direction);
-		/*if(error >10)
-			acceleration=0.000001;
-		if(error <-10)
-					acceleration=0.000001;*/
+		 acceleration+= eta[0]/WHEEL_INTERTIA;*/
 	 	if (acceleration< -300)
 	 		acceleration=-300;
 	 	if (acceleration >300)
@@ -328,8 +380,7 @@ int main(void)
 
 
 
-  get_f(Np,  r,  F, Xf,Phi, f);
-  QPhild2(H, f, A_cons,b, eta);
+
   while (1)
   {
 		HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_8);
@@ -494,7 +545,7 @@ void MX_TIM6_Init(void)
   htim6.Instance = TIM6;
   htim6.Init.Prescaler = 359;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 999;
+  htim6.Init.Period = 499;
   HAL_TIM_Base_Init(&htim6);
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
@@ -528,8 +579,11 @@ void MX_DMA_Init(void)
 {
   /* DMA controller clock enable */
   __DMA2_CLK_ENABLE();
+  __DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
+  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
   HAL_NVIC_SetPriority(DMA2_Channel5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Channel5_IRQn);
 
