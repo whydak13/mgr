@@ -87,8 +87,6 @@ I2C_HandleTypeDef hi2c1;
 DMA_HandleTypeDef hdma_i2c1_rx;
 
 SPI_HandleTypeDef hspi1;
-DMA_HandleTypeDef hdma_spi1_rx;
-DMA_HandleTypeDef hdma_spi1_tx;
 
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
@@ -235,7 +233,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		}
 		X_diff[4]=speed* R_WHEEL;
 		X_diff[5]=angle_correction;
-		 get_f(Np,  r,  F, X_diff,Phi, f);
+		/* get_f(Np,  r,  F, X_diff,Phi, f);
 		 QPhild2(H, f, A_cons,b, eta);
 		// acceleration = (P*error + I*integral + D*derivative);//*stepper_direction ;
 		 for(int i=0;i<4;i++)
@@ -252,7 +250,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			 else
 				 HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_RESET);
 		 } else HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_SET);
-		 acceleration+= eta[0]/WHEEL_INTERTIA;
+		 acceleration+= eta[0]/WHEEL_INTERTIA;*/
 	 	if (acceleration< -300)
 	 		acceleration=-300;
 	 	if (acceleration >300)
@@ -531,10 +529,6 @@ void MX_DMA_Init(void)
   __DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
-  HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
-  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
   HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
   HAL_NVIC_SetPriority(DMA2_Channel5_IRQn, 0, 0);
