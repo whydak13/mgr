@@ -84,6 +84,7 @@ ADC_HandleTypeDef hadc3;
 DMA_HandleTypeDef hdma_adc3;
 
 I2C_HandleTypeDef hi2c1;
+DMA_HandleTypeDef hdma_i2c1_rx;
 
 SPI_HandleTypeDef hspi1;
 
@@ -190,7 +191,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
  if(htim->Instance == TIM6){ // Je¿eli przerwanie pochodzi od timera 6 200Hz
-	 float const dt=0.005;
+	 float const dt=0.1;
 	 time_s+=dt;
 
 	 //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
@@ -249,7 +250,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			 else
 				 HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_RESET);
 		 } else HAL_GPIO_WritePin(GPIOA,GPIO_PIN_3,GPIO_PIN_SET);
+		if(eta[0]==eta[0])//false when NaN
 		 acceleration+= eta[0]/WHEEL_INTERTIA;
+
+
 	 	if (acceleration< -300)
 	 		acceleration=-300;
 	 	if (acceleration >300)
@@ -489,7 +493,7 @@ void MX_TIM6_Init(void)
   TIM_MasterConfigTypeDef sMasterConfig;
 
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 359;
+  htim6.Init.Prescaler = 719;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim6.Init.Period = 999;
   HAL_TIM_Base_Init(&htim6);
@@ -525,8 +529,11 @@ void MX_DMA_Init(void)
 {
   /* DMA controller clock enable */
   __DMA2_CLK_ENABLE();
+  __DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
+  HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
   HAL_NVIC_SetPriority(DMA2_Channel5_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Channel5_IRQn);
 

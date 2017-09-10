@@ -116,7 +116,7 @@ void QPhild2(const float H[9], const float f[3], const float A_cons[36], const
     /* 'QPhild2:27' for km=1:38 */
     km = 0;
     exitg1 = false;
-    while ((!exitg1) && (km < 38)) {
+    while ((!exitg1) && (km < 38)) {///while ((!exitg1) && (km < 38))
       /* find the elements in the solution vector one by one */
       /*  km could be larger if the Lagranger multiplier has a slow */
       /*  convergence rate. */
