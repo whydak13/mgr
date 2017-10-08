@@ -48,7 +48,7 @@ float BalancePoint= 88.57;
 float time_s=0;
 float angle=0;
 float angle_correction;
-float comp_gain=0.005;
+float comp_gain=0.05;
 float set_point;
 float speed_set_point=0;
 float speed=0;
@@ -146,7 +146,7 @@ const float A_cons[36]={
 		1.000000,1.000000,1.000000,-1.000000,-1.000000,-1.000000,1.000000,0.000000,0.000000,-1.000000,-0.000000,-0.000000,
 		0.000000,1.000000,1.000000,-0.000000,-1.000000,-1.000000,0.000000,1.000000,0.000000,-0.000000,-1.000000,-0.000000,
 		0.000000,0.000000,1.000000,-0.000000,-0.000000,-1.000000,0.000000,0.000000,1.000000,-0.000000,-0.000000,-1.000000};
-const float b[12]={
+float b[12]={
 		  0.200000,
 		  0.200000,
 		  0.200000,
@@ -205,7 +205,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		if(time_to_next_step<5)
 			time_to_next_step=5;
 
-		speed=(float)((GET_WHEEL_SPEED_FACTOR*stepper_direction)/time_to_next_step);
+		speed=(float)((GET_WHEEL_SPEED_FACTOR*(float)stepper_direction)/(float)time_to_next_step);
 		speed_integral+= speed*dt;
 
 	 	gyro_X_angle+=gyro_X_speed *dt;
@@ -233,6 +233,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		}
 		X_diff[4]=speed* R_WHEEL;
 		X_diff[5]=angle_correction;
+
+	//	get_b_constraints(1, 1, 0, b);
 		 get_f(Np,  r,  F, X_diff,Phi, f);
 		 QPhild2(H, f, A_cons,b, eta);
 		// acceleration = (P*error + I*integral + D*derivative);//*stepper_direction ;
@@ -254,11 +256,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		 acceleration+= eta[0]/WHEEL_INTERTIA;
 
 
-	 	if (acceleration< -300)
+	 	/*if (acceleration< -300)
 	 		acceleration=-300;
 	 	if (acceleration >300)
 	 		acceleration=300;
-
+*/
 	 	Voltage=3*(((float)Analog[0])/409);
 	 	Current=3*(((float)Analog[1])/409);
 
