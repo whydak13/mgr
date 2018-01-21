@@ -1,0 +1,221 @@
+\chapter{Sterowanie predykcyjne}
+\label{cha:MPC}
+Sterowanie predykcyjne (ang. MPC – model predictive control) to rodzaj sterowania w którym regulator dostosowuje swoje wyjście, nie tylko do akutalnego stanu układu, lecz także do 
+przewidywanych przyszłych trajektorii. Przewidywany stan jest wyznaczany na podstawie aktualnych wejść oraz równań stanu ukladu. Wyznaczanie sterowania polega na cyklicznym wyznaczaniu optymalnej trajektorii przy warunkach początkowych równych akutalnemu stanu obiektu. Pierwszy odcinek sekwencji sterowań jest podawany na wejście obiektu, następnię cała procedura zostaje powtórzona dla aktualnego stanu obiektu w celu wyznaczenia nowej trajektorii. [ta ksiazka od mpc]. Przykładowy schemat obrazujący pracę regulatora predykcyjnego został przedstawiony na rysunku X.
+
+-Wyjaśnienie symobli-
+
+\section{Sterowanie predykcyjne na podstawie równań stanu}
+\label{mpc_ss}
+
+Dla uproszczenia podstawy matematyczne kontroli predykcyjnej zaprezentowane zostaną na prostym modelu z jednym wejściem i jednym wyjśćiem przedstawionym równaniami \ref{5row1}:\ref{5row1__1}
+
+\begin{equation}
+\label{5row1} 
+x_m(k+1)=A_mx_m(k)+B_mu(k)
+\end{equation}
+\begin{equation}
+\label{5row1__1} 
+y(k)=C_mx_m(k)
+\end{equation}
+
+Gdzie $u$ jest wejściem systemu, $y$ to wyjście procesu a $x_m$ jest wektorem stanu długości $n_1$. Na potrzeby kontroli predykcyjnej konieczne będzie zapisanie systemu w postaci różnicowej \ref{5row2}
+
+\begin{equation}
+\label{5row2} 
+\Delta x_m(k+1)=A_m\Delta x_m(k)+B_m\Delta u(k)
+\end{equation}
+
+Kolejnym etapem jest powiązanie $\Delta x_m(k)$ z wyjściem $y(k)$. Można to zrobić za pomocą nowego wektora stanu w postaci \ref{5row3}
+
+\begin{equation}
+\label{5row3} 
+x(k)=[\Delta x_m(k)^T+y(k)]^T
+\end{equation}
+
+Wprowadzone przekształcenia pozwalają zapisać model \ref{5row1} w postaci rozszerzonej \ref{5row4}:\ref{5row5} będącej podstawą kontroli predykcyjnej. 
+\begin{equation}
+\label{5row4} 
+x(k+1)=\begin{bmatrix}	A_m & o^T_m  \\	C_mA_m & 1 \end{bmatrix}
+\begin{bmatrix}	\Delta x_m(k) \\y(k) \end{bmatrix}+
+\begin{bmatrix}	B_m \\ C_mB_m \end{bmatrix} \Delta u(k)
+\end{equation}
+\begin{equation}
+\label{5row5} 
+y(k)=\begin{bmatrix}	o_m & 1 \end{bmatrix}  \begin{bmatrix} \Delta x_m(k) \\y(k) \end{bmatrix} 
+\end{equation}
+
+
+Uproszczony zapis postaci rozszerzonej został przedstawiony przy pomocy równań \ref{5row6}:\ref{5row7}
+
+
+\begin{equation}
+\label{5row6} 
+x(k+1)=Ax(k)+B \Delta u(k)
+\end{equation}
+\begin{equation}
+\label{5row7} 
+y(k)=C \begin{bmatrix} \Delta x_m(k) \\y(k) \end{bmatrix} 
+\end{equation}
+
+\section{Kontrola predykcyjna z pojedyńczym oknem optymalizacji}
+
+Po wprowadzeniu modelu rozszerzonego kolejnym etapem jest wyznaczenie przewidywanego wyjśćia obiektu na podstawie przyszłych wartości sterowania. Oszczacowanie to jest nazywane oknem optymalizacji. Parametrem definiującym okno jest jego długość $N_p$. Przyjmując, że w dyskretnej chwilę $k_i$ wektor $x(k_i)$ jest możliwy do pomiaru, stan $x(k_i)$ dostarcza informację o aktualnym stanie modelu. Trajektora przyszłych sterowań może zostać zapisana jako \ref{5row8}
+
+\begin{equation}
+\label{5row8} 
+\Delta(k_i),\Delta(k_i+1), ..., \Delta(k_i+N_c-1),
+\end{equation}
+
+gdzie $N_c$ to horyzont kontroli oznaczający ilość wyznaczanych przyszłych próbek sterowania. Na podstawie informacji $x(k_i)$ przyszłe zmienne stanu wyznaczane są dla $N_p$ próbek gdzie parametr $N_p$ oznacza horyzont predykcji. Horyzont kontroli musi być mniejszy od równy od horyzontu predykcji.
+Przyszłe zmienne stanu można zapisać w postaci \ref{5row9}
+
+\begin{equation}
+\label{5row9} 
+x(k_i+1|k_i),x(k_i+2|k_i),...,x(k_i+m|k_i),...,x(k_i+N_p|k_i),
+\end{equation}
+
+Gdzie $x(k_i+m|k_i)$ jest przewidywanym stanem zmiennej w chwili $k_i+m$ na podstawie stanu $x(k_i)$. Na podstawie równań stanu wprowadzonych w punkcie \label{mpc_ss} przyszłe zmienne stanu są obliczane sekwencyjnie przy wykorzystaniu parametrów kontrolnych \ref{5row10}
+
+
+ \begin{gather}
+ \label{5row10}
+x(k_i+1|k_i)=Ax(k_i)+B\Delta u(k_i) \\
+\nonumber x(k_i+2|k_i)=Ax(k_i+1)+B\Delta u(k_i+1) \\
+\nonumber =A^2x(k_i)+AB\Delta u(k_i)+B\Delta u(k_i+1) \\
+%pionowe kropki%
+\nonumber x(k_i+N_p|k_i)=A^{N_p}x(k_i)+A^{N_p-1}B\Delta u(k_i)+A^{N_p-2}B\Delta u(k_i+1) \\
+\nonumber + ... + A^{N_p -N_c}B\Delta u(k_i+N_c-1)
+\end{gather}
+
+Na podstawie przyszłych zmiennych stanu wyznaczane są przyszłe wyjścia \ref{5row11}
+
+
+\begin{gather}
+\label{5row11}
+y(k_i+1|k_i)=CAx(k_i)+CB\Delta u(k_i) \\
+\nonumber y(k_i+2|k_i)=CA^2x(k_i)+CAB\Delta u(k_i)+CB\Delta u(k_i+1) \\
+%pionowe kropki%
+\nonumber y(k_i+N_p|k_i)=CA^{N_p}x(k_i)+CA^{N_p-1}B\Delta u(k_i)+CA^{N_p-2}B\Delta u(k_i+1) \\
+\nonumber + ... + CA^{N_p -N_c}B\Delta u(k_i+N_c-1)
+\end{gather}
+
+Kolejnym krokiem jest wprowadzenie wektorów $Y$ i $\Delta U$ \ref{5row12}
+
+
+\begin{gather}
+\label{5row12}
+Y=\begin{bmatrix} y(k_i+1 |k_i) & y(k_i+2 |k_i) & y(k_i+3 |k_i) & ... & y(k_i+N_p |k_i) \end{bmatrix} ^T\\
+\nonumber \Delta U= \begin{bmatrix} \Delta u(k_i) & \Delta u(k_i+1) &  \Delta u(k_i+2) & ... &  \Delta u(k_i+N_c-1) \end{bmatrix} ^T
+\end{gather}
+
+Dzięki wektorom $Y$ i $\Delta U$ możliwe jest zapisanie \ref{5row10} i \ref{5row11} w postaci  \ref{5row13}
+
+\begin{gather}
+\label{5row13}
+Y=Fx(k_i)+ \Phi \Delta U
+\end{gather}
+
+Gdzie
+
+\begin{gather}
+\label{5row14}
+F= \begin{bmatrix} CA & CA^2 & CA^3 & \dots & CA^{N_p}\end{bmatrix}^T \\
+\nonumber \Phi =  \begin{bmatrix} CB & 0 & 0 \dots & 0 \\
+CAB & CB & 0 & \dots & 0 \\
+CA^2B & CAB & CB & \dots & 0 \\%pionowe kropki?%
+CA^{N_p-1}B & CA^{N_p-2}B & CA^{N_p-3}B & \dots & CA^{N_p-N_c}B \end{bmatrix}
+\end{gather}
+
+\section{Optymalizacja}
+\label{mpc_optym}
+Dla sygnałru $r(k_i)$ reprezentującego wartość zadaną w chwili $k_i$, w zakresie horyzontu predykcji, celem regulatora predykcyjnego jest sprowadzić przewidywane wyjście, tak blisko jak to możliwe do wartości zadanej. Wartość zadana pozostaje stała w pojedyńczym oknie optymalizacji. Wektor optymalnych sterowań $\Delta U$ minimalizuje funkcję błędu \ref{5row16} pomiędzy wartością zadaną a przewidywanym wyjściem układu.
+
+\begin{gather}
+\label{5row15}
+R^T_s= \begin{bmatrix} 1_2 & 1_2 & ... & 1_{N_p}\end{bmatrix} r(k_i) 
+\end{gather}
+
+
+\begin{gather}
+\label{5row16}
+J=(R_s-Y)^T(R_s-Y)+\Delta U^T \bar{R} \Delta U 
+\end{gather}
+
+Pierwszy część równania \ref{5row16} jest odpowiada za minimalizację błędu pomiędzy wyjściem obietku a wartością zadaną. Druga część odpowiada kosztom odpowiadającym sterowaniu. Wyeliminwanie tego elementu sprawi, że duże wartości $\Delta U$ nie będą pogarszały wartości funkcji celu.
+
+Aby uzyskać wektor optymalnych sterowań należy znaleźć minimum $J$ przy użyciu \ref{5row13}. Równanie \ref{5row16} można wtedy zapisać w postaci \ref{5row17}
+
+\begin{gather}
+\label{5row17}
+J=(R_s-Fx(k_i))^T(R_s-Fx(k_i))- 2\Delta U^T \Phi^T (R_s-Fx(k_i)) +\Delta U^T (\Phi^T \Phi + \bar{R}) \Delta U 
+\end{gather}
+
+Warunkiem koniecznym istnienia minimum $J$ jest wyrażony równaniem \ref{5row18}
+\begin{gather}
+\label{5row18}
+\frac{dJ}{d\Delta U}=0
+\end{gather}
+
+Przy wykorzystaniu równania \ref{5row18} można wyznaczyć wektor optymalnych sterowań w postaci \ref{5row19}
+
+\begin{gather}
+\label{5row19}
+\Delta U = (\Phi^T \Phi + \bar{R})^{-1} \Phi^T(R_s-Fx(k_i))
+\end{gather}
+
+Przy założeniu, że $(\Phi^T \Phi + \bar{R})^{-1}$ istnieje. Macierz $(\Phi^T \Phi + \bar{R})^{-1}$ zgodnie z nomenklaturą nazywamy Hessianem.
+
+Związek wektora sterowań optymlanych z wektorem stanu oraz wartością zadaną przedstawia równanie \ref{5row20}
+
+\begin{gather}
+\label{5row20}
+\Delta U = (\Phi^T \Phi + \bar{R})^{-1} \Phi^T(\bar{R_s}r(k_i)-Fx(k_i))
+\end{gather}
+
+\section{Kontrola Predykcyjna z ograniczeniami}
+
+Przedstawiona w sekcji \ref{mpc_optym} metoda wyznaczania wektora sterowań optymalnych $\Delta U$ nie umożliwia implementacji ograniczeń którym podlegają zmienne stanu oraz sterowanie. W rzeczywistych systemach sterowania wartości fizyczne opisujące obiekt mają ograniczony zakres. W omawianym w rozdziale \ref{cha:model} modelu robota większość ograniczeń wynika z ograniczonej mocy zastosowanych silników. Ich nota katalogowa omówiona w rozdziale \ref{cha:KonstrukcjaMechaniczna} pozwala oszacować maksymalny moment obrotowy, przyśpieszenie oraz prędkość kątową. Sterowanie wyznaczające wartości poza zakresem nie będzie mogło być zrealizowane. W celu zachowania zgodności systemu sterowania z rzeczywistym obiektem wprowadzone zostaną ograniczenia.
+
+Ograniczenia w postaci \ref{5row21} mogą określać maksymalny przyrost zmiennej podczas jednej iteracji lub całkowitą wartość zmiennej. 
+
+\begin{gather}
+\label{5row21}
+ \Delta x^{min} \leq \Delta x(k) \leq \Delta x^{max}\\
+\nonumber  x^{min} \leq  x(k) \leq  x^{max}
+\end{gather}
+
+Następnym krokiem po sformułowaniu równań w postaci \ref{5row21} jest wprowadzenie tych zależności do procesu wyznaczania optymalnego sterowania. Ograniczenia przyrostu zmiennej są prostsze do wprowadzenia ze względu na zastosowaną postać różnicową równań stanu. Ograniczenia przyrostowe dla wektora $X$ mozna przedstawić jako zalezność \ref{5row22} która może zostać zapisane pod postacią dwóch nierówności \ref{5row23}
+
+\begin{gather}
+\label{5row22}
+\Delta X^{min} \leq \Delta X \leq \Delta X^{max}
+\end{gather}
+\begin{gather}
+\label{5row23}
+-\Delta X \leq \Delta X^{min} \\
+\nonumber \Delta X \leq \Delta X^{max}
+\end{gather}
+
+Nierówności \ref{5row23} można zapisać w postaci macierzowej \ref{5row24}
+\begin{gather}
+\label{5row24}
+\begin{bmatrix} - I \\ I \end{bmatrix} \Delta X \leq \begin{bmatrix} - \Delta X^{min} \\ \Delta X^{max} \end{bmatrix}
+\end{gather}
+
+Ograniczenia rzeczywistej wartości zmiennej wymagają drobnej modyfikacji. W celu ograniczenia zakresu wartości przyjomwanych przez zmienną w systemie przyrostowym, ograniczona musi zostać suma wszystkich elementów rozważanego wektora $\Delta X$ oraz wartości począkowej $x(k_0)$. Zamieniając macierze jednostkowe macierzą Toeplitza $T$ przedstawionej równaniem \ref{5row25}
+
+\begin{gather}
+\label{5row25}
+\begin{bmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix} \longrightarrow  \begin{bmatrix} 1 & 0 & 0 \\ 1 & 1 & 0 \\ 1 & 1 & 1 \end{bmatrix}
+\end{gather}
+
+Zapis ten w formie macierzowej przyjmuje postać \ref{5row26}
+
+\begin{gather}
+\label{5row26}
+\begin{bmatrix} - T \\ T \end{bmatrix} \Delta X \leq \begin{bmatrix} -  X^{min} + x(k_0) \\ \ X^{max} -x(k_0) \end{bmatrix}
+\end{gather}
+
+Znając wartości $max, \Delta max, min$ oraz $ \Delta min$ dla każdej zmiennej można sformułować dla niej ograniczenia w postaci macierzowej \ref{5row24} oraz \ref{5row26}. Wszystkie ograniczenia mają postać nierówności liniowych. Hessian $(\Phi^T \Phi + \bar{R})^{-1}$ jest pozytywnie określony a funkcja kosztu $J$ jest kwadratowa. Spełniając powyższe założenia problem wyznaczenia optymalnego sterowania $\Delta U$ staje się standardowym zadaniem optymalizacji kwadratowej z ograniczeniami 
+

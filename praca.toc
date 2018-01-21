@@ -1,0 +1,27 @@
+\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax 
+\select@language {polish}
+\contentsline {chapter}{\numberline {1}Wprowadzenie}{3}
+\contentsline {section}{\numberline {1.1}Cel}{3}
+\contentsline {section}{\numberline {1.2}Zakres pracy}{3}
+\contentsline {section}{\numberline {1.3}Zawarto\IeC {\'s}\IeC {\'c} pracy}{3}
+\contentsline {chapter}{\numberline {2}Konstrukcja mechaniczna}{5}
+\contentsline {section}{\numberline {2.1}Rama i rozlokowanie podzespo\IeC {\l }\IeC {\'o}w}{5}
+\contentsline {section}{\numberline {2.2}Silniki}{5}
+\contentsline {chapter}{\numberline {3}Urz\IeC {\k a}dzenie elektroniczne}{7}
+\contentsline {section}{\numberline {3.1}Sterownik}{7}
+\contentsline {section}{\numberline {3.2}\IeC {\.Z}yroskop}{7}
+\contentsline {section}{\numberline {3.3}Akcelerometr}{8}
+\contentsline {section}{\numberline {3.4}Sterownik silnik\IeC {\'o}w krokowych}{8}
+\contentsline {section}{\numberline {3.5}Zasilanie}{9}
+\contentsline {chapter}{\numberline {4}Modelowanie i identyfikacja}{11}
+\contentsline {section}{\numberline {4.1}Model nieliniowy}{11}
+\contentsline {subsection}{\numberline {4.1.1}Opis matematyczny obiektu}{11}
+\contentsline {subsubsection}{\numberline {4.1.1.1}Wyprowadzenie r\IeC {\'o}wna\IeC {\'n} modelu}{12}
+\contentsline {section}{\numberline {4.2}Model liniowy}{13}
+\contentsline {section}{\numberline {4.3}Symulacja oraz wizualizacja wynik\IeC {\'o}w}{14}
+\contentsline {chapter}{\numberline {5}Sterowanie predykcyjne}{17}
+\contentsline {section}{\numberline {5.1}Sterowanie predykcyjne na podstawie r\IeC {\'o}wna\IeC {\'n} stanu}{17}
+\contentsline {section}{\numberline {5.2}Kontrola predykcyjna z pojedy\IeC {\'n}czym oknem optymalizacji}{18}
+\contentsline {section}{\numberline {5.3}Optymalizacja}{19}
+\contentsline {section}{\numberline {5.4}Kontrola Predykcyjna z ograniczeniami}{20}
+\contentsline {chapter}{\numberline {6}Optymalizacja sterowania}{23}

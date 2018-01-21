@@ -1,0 +1,49 @@
+\chapter{Konstrukcja mechaniczna}
+\label{cha:KonstrukcjaMechaniczna}
+
+W rozdziale zawarto opis konstrukcji ramy pojazdu oraz jednostki napędowej. Założenia projektowe części mechanicznej to uzyskanie maksymalnej trwałości przy utrzymaniu niskich kosztów pojazdu oraz możliwość łatwej modyfikacji i napraw. 
+
+\section{Rama i rozlokowanie podzespołów}
+Podstawowym założeniem podczas projektu ramy robota oraz rozlokowywaniu komponentów było zabezpieczenie przed uszkodzeniami wynikającymi z ewentualnych upadków. Rama została wykonana z płyty pleksiglasowej o grubości 4mm. Pozwoliło to utrzymać niską masę przy stosunkowo dużej wytrzymałości konstrukcji. Poszczególne części sterownika zostały przykręcone do ramy w górnej części pojazdu i zabezpieczone przed uderzeniami dodatkowymi fragmentami ramy.
+
+Zastosowanie dwóch kul podporowych, po obu stronach robota, pozwala także na jazdę w pozycji poziomej. Akumulatory zostały umieszczone w dolnej części pojazdu, rozwiązanie to znacznie obniża środek ciężkości. Pozwala to na bardziej dynamiczną jazdę lecz utrudnia stabilizację w górnym punkcie równowagi. W kolejnych podpunktach omówione zostaną kluczowe elementy mechaniczne konstrukcji. Zdjęcie poglądowe robota zostało przedstawione na rysunku \ref{zdj_robot}
+
+\begin{figure}[h]
+	\centering
+%	\includegraphics[scale=0.6]{}
+	\caption{ Zdjęcie poglądowe robota. Zdjęcie własne}
+	\label{zdj_robot}
+\end{figure}
+
+\section{Silniki}
+
+Jako element napędowy robota zastosowano dwa silniki krokowe 42HS40-0504.Stosunkowo duży moment obrotowy przy niskiej prędkości obrotowej, możliwość kontroli pozycji w pętli otwartej oraz możliwość częstej zmiany kierunku czynią silniki krokowe zasadnym wyborem do pojazdu tego typu. Zastosowane w poprzedniej iteracji projektu silniki zostały jednak wymienione silniki hybrydowe o większym momencie obrotowym oraz wyższej liczbie kroków na obrót. Podstawowe parametry wykorzystanych silników przedstawione zostały w tabeli \ref{tab:skutecznosc}
+
+\begin{table}
+	\centering
+	
+	\begin{tabular}{|c|r|r|}
+	
+		\hline
+		Model& 42HS40-0504 \\		
+		\hline
+		Liczba kroków&  200\\      
+		\hline                                      
+		Napięcie znamionowe &12V   \\       
+		\hline                                      
+		Pobór prądu na cewkę &  0,5A\\ 
+		\hline                                                                         
+		Rezystancja cewki & 24Ohm\\
+		\hline      
+		Moment trzymający& 0,44Nm\\
+		\hline      
+		Wymiary bez wału& 42 x 42 x 40mm\\
+		\hline      
+		
+		\hline        
+	\end{tabular}
+	\caption{Parametry silników}
+	\label{tab:skutecznosc}	
+\end{table}
+
+
