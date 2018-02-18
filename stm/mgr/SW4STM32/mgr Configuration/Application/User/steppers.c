@@ -44,8 +44,8 @@ uint32_t calculate_next_step(float* acceleration,int8_t* stepper_direction)
 		n--;
 	}
 
-	if(c>10010)
-			c=10005;
+	if(c>1010)
+			c=1005;
 
     accleration_prev=(*acceleration);
     return (uint32_t)c;
