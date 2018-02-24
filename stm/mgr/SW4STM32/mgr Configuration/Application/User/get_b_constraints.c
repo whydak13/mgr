@@ -451,7 +451,7 @@ void QPhild2(const float H[9], const float f[3], const float A_cons[36], const
     /* 'QPhild2:27' for km=1:38 */
     km = 0;
     exitg1 = false;
-    while ((!exitg1) && (km < 20)) {//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<,
+    while ((!exitg1) && (km < 10)) {//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<,
       /* find the elements in the solution vector one by one */
       /*  km could be larger if the Lagranger multiplier has a slow */
       /*  convergence rate. */
@@ -645,21 +645,27 @@ void emxInitArray_real_T(emxArray_real_T **pEmxArray, int numDimensions)
  *                float B_cons[12]
  * Return Type  : void
  */
-void get_b_constraints(float max_u_delta, float max_u, float current_u, float
-  B_cons[12])
+void get_b_constraints(float max_u_delta, float max_u, float acceleration, float
+  b[12])
 {
   int i;
 
   /* 'get_b_constraints:2' Nc=3; */
   /* 'get_b_constraints:3' B_cons = [max_u_delta * ones(Nc*2,1)- current_u */
   /* 'get_b_constraints:4'           max_u * ones(Nc*2,1)+ current_u]; */
-  for (i = 0; i < 6; i++) {
-    B_cons[i] = max_u_delta - current_u;
-  }
 
-  for (i = 0; i < 6; i++) {
-    B_cons[i + 6] = max_u + current_u;
-  }
+	for (i = 0; i < 3; i++) {
+			   b[i] = max_u - acceleration;
+			 }
+	for (i = 0; i < 3; i++) {
+				b[i+3] = -max_u - acceleration;
+	}
+	for (i = 0; i < 3; i++) {
+			 b[i + 6] = acceleration+max_u_delta  ;
+	}
+	for (i = 0; i < 3; i++) {
+			 b[i + 9] = -max_u_delta +acceleration;
+	}
 }
 
 /*

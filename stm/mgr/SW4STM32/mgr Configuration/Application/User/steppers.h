@@ -26,8 +26,9 @@
 
 #define DEGREE2RAD 0.0174532925
 #define RAD2DEGREE 57.2957795
+//#define WHEEL_INTERTIA 2.2456e-05
 #define MAX_U 15*WHEEL_INTERTIA
-#define MAX_U_DELTA 0.01*WHEEL_INTERTIA
+#define MAX_U_DELTA 5*WHEEL_INTERTIA
 
 #define STEPPER_DRIVER_FREQUENCY 100000.0
 #define MOTOR_STEP_DIVIDER 8.0
@@ -56,5 +57,6 @@ void steppers_init(int step_divider);
 void make_step(int8_t direction);
 void delay_200ns();
 
+//void get_b_constraints(float acceleration,float * b);
 
 #endif /* APPLICATION_USER_STEPPERS_H_ */
