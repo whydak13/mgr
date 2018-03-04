@@ -451,7 +451,7 @@ void QPhild2(const float H[9], const float f[3], const float A_cons[36], const
     /* 'QPhild2:27' for km=1:38 */
     km = 0;
     exitg1 = false;
-    while ((!exitg1) && (km < 10)) {//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<,
+    while ((!exitg1) && (km < 38)) {//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<,
       /* find the elements in the solution vector one by one */
       /*  km could be larger if the Lagranger multiplier has a slow */
       /*  convergence rate. */
@@ -653,19 +653,15 @@ void get_b_constraints(float max_u_delta, float max_u, float acceleration, float
   /* 'get_b_constraints:2' Nc=3; */
   /* 'get_b_constraints:3' B_cons = [max_u_delta * ones(Nc*2,1)- current_u */
   /* 'get_b_constraints:4'           max_u * ones(Nc*2,1)+ current_u]; */
-
-	for (i = 0; i < 3; i++) {
-			   b[i] = max_u - acceleration;
+  b[0]=777;
+	for (i = 0; i < 6; i++) {
+			   b[i] = max_u + acceleration;
 			 }
-	for (i = 0; i < 3; i++) {
-				b[i+3] = -max_u - acceleration;
+
+	for (i = 0; i < 6; i++) {
+			 b[i + 6] = +max_u_delta -acceleration ;
 	}
-	for (i = 0; i < 3; i++) {
-			 b[i + 6] = acceleration+max_u_delta  ;
-	}
-	for (i = 0; i < 3; i++) {
-			 b[i + 9] = -max_u_delta +acceleration;
-	}
+
 }
 
 /*

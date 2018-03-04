@@ -66,6 +66,9 @@ float derivative;
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+
+
 
 #include "LIB_Config.h"
 #include "G:\Studia\Mgr\mgr\stm\mgr\SW4STM32\mgr Configuration\Application\User\get_b_constraints.h"
@@ -92,9 +95,13 @@ SPI_HandleTypeDef hspi1;
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
 
+UART_HandleTypeDef huart1;
+DMA_HandleTypeDef hdma_usart1_rx;
+DMA_HandleTypeDef hdma_usart1_tx;
+
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+uint8_t Received[10]; //data buffer from uart/bluettoh
 uint32_t steppers_cnt=0;
 uint32_t time_to_next_step=2;
 int8_t stepper_direction=1;
@@ -152,29 +159,15 @@ const float  A_cons[36]={
 0.000000,1.000000,1.000000,-0.000000,-1.000000,-1.000000,0.000000,1.000000,0.000000,-0.000000,-1.000000,-0.000000,
 0.000000,0.000000,1.000000,-0.000000,-0.000000,-1.000000,0.000000,0.000000,1.000000,-0.000000,-0.000000,-1.000000,
 };
-float b[12]={
-		30,
-	    30,
-		30,
-		-30,
-		-30,
-		-30,
-		  1,
-		  1,
-		  1,
-		 - 1,
-		 - 1,
-		 - 1,
-
-		  };
+float b[12];
 
 float eta[3];
-float X_prev[6]	=	  {-1.12, //phi
+float X_prev[6]	=	  {0,//-1.12, //phi
 0.000000, //etha
 0.000000, //d phi
 0.000000, //d etha
 0.000000, // wheel speed out
--1.12 }; //etha out
+0};//-1.12 }; //etha out
 float X_diff[6];
 float f[3];
 /////////////////////MPc VARIABLES END ////////////////////////////////////////////
@@ -189,6 +182,7 @@ static void MX_I2C1_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_TIM7_Init(void);
+static void MX_USART1_UART_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -210,7 +204,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
  if(htim->Instance == TIM6){ // Je¿eli przerwanie pochodzi od timera 6 200Hz
 	 float const dt=0.02;
 	 time_s+=dt;
-
+/*
 	 //HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_6);
 	  // Pobranie 6 bajt7ow danych zawierajacych przyspieszenia w 3 osiach
 	  	TM_L3GD20_Read(&L3GD20_Data);
@@ -277,7 +271,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 
 	 	Voltage=3*(((float)Analog[0])/409);
 	 	Current=3*(((float)Analog[1])/409);
-
+*/
  }
  if(htim->Instance == TIM7){ // Je¿eli przerwanie pochodzi od timera 7 100 kHz
 	 steppers_cnt++;
@@ -290,6 +284,75 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	 }
  }
 }
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+
+ static uint8_t Data[260]; // Tablica przechowujaca wysylana wiadomosc.
+
+ //sprintf(Data, "Odebrana wiadomosc: %s\n\r", Received);
+
+ float const dt=0.02;
+ TM_L3GD20_Read(&L3GD20_Data);
+ getAcceleration(&LSM303_Data);
+ gyro_X_speed =((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001)*0.0174532925;
+
+
+ speed=(float)((-GET_WHEEL_SPEED_FACTOR*(float)stepper_direction)/(float)time_to_next_step);
+ speed_integral+= speed*dt; //+= speed*dt;
+
+ gyro_X_angle+=gyro_X_speed *dt;
+ accel_angle=atan2f(LSM303_Data.X,LSM303_Data.Z)*-1;
+
+ angle=comp_gain*accel_angle+(1-comp_gain)*(angle+((float)(L3GD20_Data.X)*L3GD20_SENSITIVITY_250 * 0.001*DEGREE2RAD)*dt);//-BalancePoint;
+
+ angle_correction=angle-BalancePoint;
+ derivative=((set_point-angle_correction)-error)/dt ;
+
+ //sprintf(Data, "Test=%g", (float)123.33);
+ int64_t X_act_int[6];
+ int64_t eta_int[3];
+
+
+ 		X_act[0]=angle_correction;
+ 		X_act[1]=speed_integral;
+ 		X_act[2]=gyro_X_speed;
+ 		X_act[3]=speed;
+ 		X_act[4]=angle_correction;//angle_correction;
+ 		X_act[5]=angle_correction;
+
+ 		int i;
+
+ 		static float X_prev[4]={0,0,0,0};
+ 		for(int i=0;i<4;i++)
+ 		   {
+ 		    	X_diff[i]=X_act[i]-X_prev[i];
+ 		    }
+ 		    X_diff[4]=angle_correction;//angle_correction;
+ 		    X_diff[5]=angle_correction;
+ 		for (i = 0; i < 6; i++) {
+ 			X_act_int[i]=(int64_t)(X_diff[i]*1000000000);
+ 			}
+
+ 		get_b_constraints(MAX_U_DELTA, MAX_U,acceleration, b);
+ 		get_f(Np,  r,  F, X_act,Phi, f);
+ 	    QPhild2(H, f, A_cons,b, eta);
+
+ 	   for (i = 0; i < 3; i++) {
+ 		  eta_int[i]=(int64_t)(eta[i]*1000000000);
+ 	    }
+ 	   for(int i=0;i<4;i++)
+ 	   {
+ 	      X_prev[i]=X_act[i];
+ 	   }
+ 	   sprintf(Data, "XA:%d;%d;%d;%d;%d;%d;%d;%d;%d",X_act_int[0],X_act_int[1],X_act_int[2],X_act_int[3],X_act_int[4],X_act_int[5],eta_int[0],eta_int[1],eta_int[2]);
+
+
+
+ 		HAL_UART_Transmit_DMA(&huart1, Data, 260); // Rozpoczecie nadawania danych z wykorzystaniem przerwan
+ 		HAL_UART_Receive_DMA(&huart1, Received, 10); // Ponowne w³¹czenie nas³uchiwania
+}
+
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -320,6 +383,7 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM6_Init();
   MX_TIM7_Init();
+  MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
   HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_1);
@@ -390,12 +454,106 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+ /*   acceleration=0;
+    		HAL_Delay(1500);
+    				X_act[0]=0;
+    				X_act[1]=0.1;
+    				X_act[2]=0;
+    				X_act[3]=0;
+    				X_act[4]=0.1;//angle_correction;
+    				X_act[5]=0.1;
+
+    				float X_prev[4]={0,0,0,0};
+    				for(int i=0;i<4;i++)
+    				{
+    					X_diff[i]=X_act[i]-X_prev[i];
+    				}
+    				X_diff[4]=angle_correction;//angle_correction;
+    				X_diff[5]=angle_correction;
+
+
+    				get_b_constraints(MAX_U_DELTA, MAX_U,acceleration, b);
+    				get_f(Np,  r,  F, X_diff,Phi, f);
+    				QPhild2(H, f, A_cons,b, eta);
+
+    				 for(int i=0;i<4;i++)
+    				 {
+    				 	X_prev[i]=X_act[i];
+    				 }
+    				if(eta[0]==eta[0])//false when NaN
+    				 acceleration+= eta[0]/WHEEL_INTERTIA; //+=
+
+    				//////////2//////////////////////////////////////////
+
+    				HAL_Delay(1500);
+    								X_act[0]=-0.0012;
+    								X_act[1]=0.1033;
+    								X_act[2]=-0.0579;
+    								X_act[3]=0.2655;
+    								X_act[4]=0.1033;//angle_correction;
+    								X_act[5]=0.1033;
+
+
+    								for(int i=0;i<4;i++)
+    								{
+    									X_diff[i]=X_act[i]-X_prev[i];
+    								}
+    								X_diff[4]=0.1033;//angle_correction;
+    								X_diff[5]=0.1033;
+
+
+    								get_b_constraints(MAX_U_DELTA, MAX_U,acceleration, b);
+    								get_f(Np,  r,  F, X_diff,Phi, f);
+    								QPhild2(H, f, A_cons,b, eta);
+
+    								 for(int i=0;i<4;i++)
+    								 {
+    								 	X_prev[i]=X_act[i];
+    								 }
+    								if(eta[0]==eta[0])//false when NaN
+    								 acceleration+= eta[0]/WHEEL_INTERTIA; //+=
 
 
 
+
+
+
+    				//////////3//////////////////////////////////////////
+    								HAL_Delay(1500);
+    								X_act[0]= 0.0081;
+
+    												X_act[1]=0.0985;
+    												X_act[2]=0.6492;
+    												X_act[3]=-0.4117;
+    												X_act[4]=0.0985;//angle_correction;
+    												X_act[5]=0.0985;
+
+
+    												for(int i=0;i<4;i++)
+    												{
+    													X_diff[i]=X_act[i]-X_prev[i];
+    												}
+    												X_diff[4]=angle_correction;//angle_correction;
+    												X_diff[5]=angle_correction;
+
+
+    												get_b_constraints(MAX_U_DELTA, MAX_U,acceleration, b);
+    												get_f(Np,  r,  F, X_diff,Phi, f);
+    												QPhild2(H, f, A_cons,b, eta);
+
+    												 for(int i=0;i<4;i++)
+    												 {
+    												 	X_prev[i]=X_act[i];
+    												 }
+    												if(eta[0]==eta[0])//false when NaN
+    												 acceleration+= eta[0]/WHEEL_INTERTIA; //+=
+
+
+*/
 
   while (1)
   {
+	  HAL_UART_Receive_IT(&huart1, Received, 10);
 		HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_8);
 		HAL_Delay(500);
 		if (Voltage <10.5)
@@ -404,10 +562,8 @@ int main(void)
 			HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_11);
 			HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_12);
 		}
-	//	TM_L3GD20_INT_ReadSPI(L3GD20_REG_WHO_AM_I) ;
-		 //TM_L3GD20_Read(&L3GD20_Data);
-	 // float x =my_regulator_ict(0,&hi2c1);
-	 //my_main_loop();
+
+
 	 /* steppers_cnt++;
 	  	 if(steppers_cnt>time_to_next_step)
 	  	 {
@@ -421,8 +577,12 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+			//////////1//////////////////////////////////////////
 
   }
+
+
+
   /* USER CODE END 3 */
 
 }
@@ -453,7 +613,8 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
 
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK2;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
   HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
 
@@ -585,6 +746,24 @@ void MX_TIM7_Init(void)
 
 }
 
+/* USART1 init function */
+void MX_USART1_UART_Init(void)
+{
+
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 9600;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONEBIT_SAMPLING_DISABLED ;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  HAL_UART_Init(&huart1);
+
+}
+
 /** 
   * Enable DMA controller clock
   */
@@ -595,6 +774,10 @@ void MX_DMA_Init(void)
   __DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
+  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
+  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
   HAL_NVIC_SetPriority(DMA1_Channel7_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel7_IRQn);
   HAL_NVIC_SetPriority(DMA2_Channel5_IRQn, 0, 0);
