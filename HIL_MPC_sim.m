@@ -11,19 +11,26 @@ xm=[0;0.1;0;0];% initial state
 [m1,n1]=size(C_e);
 [n,n_in]=size(B_e);
 
+%% Initialise serial
 
+delete(instrfindall);
+serial4 = serial('COM6', 'BaudRate', 115200,'timeout',3);
+serial4.InputBufferSize=1000;
+fopen(serial4)
 
 %% SIM PART
 Xf=zeros(n,1);
-N_sim=4;
+N_sim=40;
 
 r=zeros(N_sim,m1);
 % r(40:60,1)=0.01*ones(21,1);
 % r(70:90,1)=-0.02*ones(21,1);
 u=0; % u(k-1) =0
+stm_u=0;
 y=0;
 
 u1=(1:N_sim).*0;
+smt_ul=(1:N_sim).*0;
 y1=zeros(N_sim,m1);
 
 %% Contraits
@@ -41,17 +48,22 @@ A_cons = [+toeplitz(ones(1,Nc),[1 zeros(1,Nc-1)])
 for kk=1:N_sim;
 
 B_cons = get_b_constraints(Nc, max_u_delta, max_u, u1(kk) );
-% [max_u_delta * ones(Nc*2,1)- u1(kk)
-%           max_u * ones(Nc*2,1)+ u1(kk)];
 [ f ] =get_f( Np, r(kk,:), F, Xf, Phi );
-%     [ f ] =get_f( Np, [0.1 0], F, Xf, Phi );
-      DeltaU=QPhild2(Phi_Phi,f,A_cons,B_cons)
-%      DeltaU=quadprog(Phi_Phi, f,A_cons, B_cons, [], [], [], [], [], optimset('Algorithm', 'interior-point-convex'));
-%    DeltaU=quadprog(Phi_Phi, f,[], [], [], [], [], [], [], optimset('Algorithm', 'interior-point-convex'));
-  
+DeltaU=QPhild2(Phi_Phi,f,A_cons,B_cons)
+
+STM_send  = [u1(kk)  r(kk,:) Xf' ] ; 
+fwrite(serial4,STM_send,'float','async') 
+
+X_F_STM = fread(serial4,7,'float')
+
+
    deltau=DeltaU(1,1);
+   
    u=u+deltau;
+   stm_u=stm_u+X_F_STM(7);
+   
    u1(kk)=sign(u)*min(abs(u),max_u);
+   smt_ul(kk)=sign(stm_u)*min(abs(stm_u),max_u);
    y1(kk,:)=y;
    xm_old=xm;
    xm=Ad*xm+Bd*u;
